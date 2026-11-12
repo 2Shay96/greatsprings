@@ -11,4 +11,4 @@ The private proof-of-concept collection now includes 2Shay’s opening, Relic co
 A new compatibility adapter runs the original Relic source. Sunny grants Guns +5 and starts cooldown.
 The recovered viewer sheet shows seven angles and metadata. Grizzly7 was the confirmed test asset.
 Twine and browser archives were inspected as source. Interactive play remains unverified.
-Next action: 2Shay reviews the README before changing repository visibility.
+2Shay approved public release after adding the Semantic Engine and RobCo Framework design goals.

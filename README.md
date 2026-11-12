@@ -10,11 +10,12 @@
 
 — 2Shay
 
-The ambition was an original C++ RPG engine for choices beyond scripted branches.
-A local or online AI dungeon master would reason about quests, relationships, and unresolved consequences.
-Persistent world facts would keep those stories consistent. A stranger needs some way to learn what happened.
+## Design goals
 
-RobCo Framework explored that idea using Fallout: New Vegas as a test case.
+I wanted to build Semantic Engine, an original C++ RPG engine that gives players a reason to return to the same world. An AI dungeon master would follow the choices each player makes and build stories from their consequences. My goal was for every choice to get a believable response, even one the quest writer never anticipated.
+
+I designed RobCo Framework as a proof-of-concept fork of Semantic Engine, using *Fallout: New Vegas* as the testbed. The dungeon master would draw on what characters know, whom they care about, and what has changed around them to propose new missions and choices. Deterministic engine checks would establish whether each proposal could actually happen. A friend might want to leave a flower at Goodsprings, but first they need to hear the news and have a way to get there.
+
 Greatsprings preserves a C# runtime, a Godot frontend, JavaScript experiments, and a Python record extractor.
 The surviving importer reads game records into JSON. A C++ backend remains a design goal.
 
