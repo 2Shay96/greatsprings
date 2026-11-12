@@ -1,0 +1,1010 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RobCo ENGINE Mk1 — Test Bench</title>
+<style>
+  :root{
+    /* the ANSI palette from the engine is the design system */
+    --bg:#060c08; --bg2:#0a140d; --panel:#0b160f; --panel2:#0e1c13;
+    --grid:#11271a; --line:#1c3a26;
+    --phos:#7cfb8e; --phos-dim:#3f7a4d; --phos-deep:#23492f;
+    --bud:#c77dff; --zax:#54d8e8; --eng:#f5c451;
+    --ok:#6dfb7a; --bad:#ff5a4d; --bone:#cfe8d4;
+    --txt:#bfe9c7; --txt-dim:#5c8a68; --txt-faint:#34503c;
+    --mono: ui-monospace,'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--mono);font-size:13px;line-height:1.5;}
+  body{
+    background:
+      radial-gradient(120% 90% at 50% -10%, #0c1a11 0%, var(--bg) 60%),
+      var(--bg);
+    min-height:100vh;
+    -webkit-font-smoothing:antialiased;
+  }
+  /* scanlines + vignette, kept subtle */
+  body::before{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:9;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.22) 2px 3px);
+    mix-blend-mode:multiply;opacity:.5;
+  }
+  body::after{
+    content:"";position:fixed;inset:0;pointer-events:none;z-index:8;
+    background:radial-gradient(130% 100% at 50% 40%, transparent 60%, rgba(0,0,0,.55) 100%);
+  }
+  @media (prefers-reduced-motion: reduce){ body::before{display:none} *{animation:none!important;transition:none!important} }
+
+  .wrap{max-width:1480px;margin:0 auto;padding:18px 18px 60px;position:relative;z-index:1}
+  a{color:var(--zax)}
+  h1,h2,h3{margin:0;font-weight:700;letter-spacing:.04em}
+  .glow{text-shadow:0 0 8px rgba(124,251,142,.45)}
+
+  /* ── header ─────────────────────────────────────────── */
+  header.top{
+    display:flex;flex-wrap:wrap;align-items:flex-end;gap:14px 22px;
+    border-bottom:1px solid var(--line);padding-bottom:12px;margin-bottom:16px;
+  }
+  .brand{display:flex;flex-direction:column;gap:3px}
+  .brand h1{font-size:19px;color:var(--bone)}
+  .brand .sub{color:var(--phos);font-size:12px;letter-spacing:.02em}
+  .brand .sub b{color:var(--bud)} .brand .sub i{font-style:normal;color:var(--zax)}
+  .meta{display:flex;gap:18px;margin-left:auto;color:var(--txt-dim);font-size:11px;flex-wrap:wrap}
+  .meta b{color:var(--bone);font-weight:700}
+  .controls{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+  button.ctl{
+    font-family:var(--mono);font-size:12px;letter-spacing:.05em;cursor:pointer;
+    background:var(--panel2);color:var(--phos);border:1px solid var(--line);
+    padding:7px 13px;border-radius:2px;text-transform:uppercase;transition:all .12s;
+  }
+  button.ctl:hover{border-color:var(--phos-dim);box-shadow:0 0 0 1px var(--phos-deep) inset,0 0 10px rgba(124,251,142,.12)}
+  button.ctl:active{transform:translateY(1px)}
+  button.ctl:disabled{opacity:.35;cursor:not-allowed;box-shadow:none}
+  button.ctl.go{color:var(--bg);background:var(--phos);border-color:var(--phos)}
+  button.ctl.go:hover{background:#9affab}
+  .speed{display:flex;align-items:center;gap:6px;color:var(--txt-dim);font-size:11px}
+  .speed input{accent-color:var(--phos)}
+
+  /* ── signal chain (the signature element) ───────────── */
+  .chain-card{border:1px solid var(--line);background:linear-gradient(180deg,var(--panel) 0,var(--bg2) 100%);border-radius:3px;padding:14px 16px 16px;margin-bottom:16px;position:relative;overflow:hidden}
+  .chain-card .eyebrow{color:var(--txt-dim);font-size:10px;letter-spacing:.22em;text-transform:uppercase;margin-bottom:12px}
+  .chain{display:flex;align-items:stretch;gap:0;flex-wrap:wrap}
+  .stage{
+    flex:1 1 0;min-width:96px;position:relative;
+    border:1px solid var(--line);border-radius:2px;margin:0 5px 8px;
+    padding:9px 8px;background:var(--panel2);transition:all .18s;
+    display:flex;flex-direction:column;gap:3px;
+  }
+  .stage .kind{font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--txt-faint)}
+  .stage .name{font-size:12px;font-weight:700;color:var(--txt-dim);letter-spacing:.02em}
+  .stage .note{font-size:10px;color:var(--txt-faint);min-height:12px}
+  .stage[data-grp=bud]{border-color:#3a2350}
+  .stage[data-grp=zax]{border-color:#1c4148}
+  .stage[data-grp=org]{border-color:#473a17}
+  .stage.active{box-shadow:0 0 0 1px currentColor inset, 0 0 14px rgba(124,251,142,.18)}
+  .stage.pass{border-color:var(--ok)} .stage.pass .name{color:var(--ok)}
+  .stage.fail{border-color:var(--bad);background:#1a0d0c} .stage.fail .name{color:var(--bad)}
+  .stage.skip{opacity:.32}
+  .stage.lit-bud{border-color:var(--bud)} .stage.lit-bud .name{color:var(--bud)} .stage.lit-bud .kind{color:var(--bud)}
+  .stage.lit-zax{border-color:var(--zax)} .stage.lit-zax .name{color:var(--zax)}
+  .stage.lit-org{border-color:var(--eng)} .stage.lit-org .name{color:var(--eng)} .stage.lit-org .kind{color:var(--eng)}
+  .arrow{align-self:center;color:var(--txt-faint);font-size:13px;padding:0 1px;flex:0 0 auto}
+  .chain-legend{display:flex;gap:16px;margin-top:4px;color:var(--txt-faint);font-size:10px;flex-wrap:wrap}
+  .chain-legend b{font-weight:700}
+  .dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:5px;vertical-align:middle}
+
+  /* ── main grid ──────────────────────────────────────── */
+  .grid{display:grid;grid-template-columns: 270px minmax(360px,1fr) 380px;gap:14px;align-items:start}
+  @media (max-width:1180px){ .grid{grid-template-columns:1fr 1fr} }
+  @media (max-width:760px){ .grid{grid-template-columns:1fr} }
+
+  .panel{border:1px solid var(--line);background:var(--panel);border-radius:3px;overflow:hidden}
+  .panel > h3{
+    font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--txt-dim);
+    padding:9px 12px;border-bottom:1px solid var(--line);background:var(--bg2);
+    display:flex;justify-content:space-between;align-items:center;
+  }
+  .panel > h3 .tag{color:var(--txt-faint);font-size:9px;letter-spacing:.1em}
+  .panel .body{padding:10px 12px}
+  .scroll{max-height:340px;overflow:auto}
+  .scroll::-webkit-scrollbar{width:8px;height:8px}
+  .scroll::-webkit-scrollbar-thumb{background:var(--line);border-radius:4px}
+  .scroll::-webkit-scrollbar-track{background:transparent}
+
+  /* queue */
+  .q-item{
+    display:grid;grid-template-columns:18px 1fr auto;gap:8px;align-items:start;
+    padding:7px 8px;border-radius:2px;cursor:default;border:1px solid transparent;
+    font-size:11.5px;line-height:1.35;transition:background .1s;
+  }
+  .q-item .n{color:var(--txt-faint);font-size:10px;padding-top:1px}
+  .q-item .say{color:var(--txt-dim)}
+  .q-item.done .say{color:var(--txt)}
+  .q-item.cur{background:#10241799;border-color:var(--phos-deep)}
+  .q-item.cur .say{color:var(--bone)}
+  .badge{font-size:9px;font-weight:700;letter-spacing:.06em;padding:2px 5px;border-radius:2px;white-space:nowrap;border:1px solid}
+  .badge.admit{color:var(--ok);border-color:var(--phos-deep);background:#0e2114}
+  .badge.reject{color:var(--bad);border-color:#5a221d;background:#1d0e0c}
+  .badge.term{color:var(--eng);border-color:#4a3a16;background:#1d1606}
+  .badge.pend{color:var(--txt-faint);border-color:var(--line)}
+
+  /* console / verdict */
+  .console{font-size:12px}
+  .bud-line{color:var(--bud);border-left:2px solid var(--bud);padding:6px 10px;background:#150a1f55;border-radius:0 2px 2px 0;margin-bottom:10px}
+  .bud-line .src{display:block;color:var(--txt-dim);font-size:10px;margin-top:3px}
+  .bud-line .src b{color:var(--bud)}
+  .gate-row{display:grid;grid-template-columns:14px 96px 1fr;gap:8px;align-items:start;padding:4px 0;border-bottom:1px dotted var(--line)}
+  .gate-row:last-child{border-bottom:0}
+  .gate-row .ic{font-weight:700}
+  .gate-row .gname{letter-spacing:.08em;text-transform:uppercase;font-size:10px;padding-top:1px}
+  .gate-row .gmsg{font-size:11px;color:var(--txt-dim)}
+  .gate-row.pass .ic{color:var(--ok)} .gate-row.pass .gname{color:var(--ok)}
+  .gate-row.fail .ic{color:var(--bad)} .gate-row.fail .gname{color:var(--bad)} .gate-row.fail .gmsg{color:var(--bad)}
+  .gate-row.skip{opacity:.3} .gate-row.skip .ic{color:var(--txt-faint)} .gate-row.skip .gname{color:var(--txt-faint)}
+  .verdict{margin-top:10px;padding:8px 10px;border-radius:2px;font-size:12px;border:1px solid var(--line)}
+  .verdict.admit{color:var(--zax);border-color:#1c4148;background:#06181b}
+  .verdict.reject{color:var(--bad);border-color:#5a221d;background:#160b0a}
+  .verdict b{color:inherit}
+  .verdict .flag{color:var(--eng);font-weight:700}
+  .organs{margin-top:10px}
+  .organs .ohead{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--txt-faint);margin-bottom:5px}
+  .onote{display:grid;grid-template-columns:92px 1fr;gap:8px;padding:3px 0;font-size:11px}
+  .onote .tag{font-size:9px;font-weight:700;letter-spacing:.06em;color:var(--eng);text-align:right}
+  .onote .tag.CONSOLE{color:var(--phos)} .onote .tag.REFLEX{color:var(--bud)}
+  .onote .tag.COMBAT{color:var(--bad)} .onote .tag.CONNECTOME{color:var(--zax)}
+  .onote .tag.CANON{color:var(--bone)} .onote .tag.VISCERA{color:var(--eng)}
+  .onote .m{color:var(--txt-dim)}
+  .empty{color:var(--txt-faint);font-size:11px;font-style:italic;padding:6px 0}
+
+  /* world state */
+  table{width:100%;border-collapse:collapse;font-size:11px}
+  th{text-align:left;color:var(--txt-faint);font-weight:600;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:4px 6px;border-bottom:1px solid var(--line)}
+  td{padding:4px 6px;border-bottom:1px dotted var(--line);vertical-align:top}
+  tr:last-child td{border-bottom:0}
+  .ent .nm{color:var(--txt)} .ent.dead .nm{color:var(--txt-faint);text-decoration:line-through}
+  .st-alive{color:var(--ok);font-size:10px} .st-dead{color:var(--bad);font-size:10px;letter-spacing:.05em}
+  .hp{font-variant-numeric:tabular-nums}
+  .knows{color:var(--zax);font-size:10px}
+  .flash{animation:flash 1.1s ease-out}
+  @keyframes flash{0%{background:#1d3b25;box-shadow:0 0 0 1px var(--phos) inset}100%{background:transparent}}
+  .flash-bad{animation:flashbad 1.1s ease-out}
+  @keyframes flashbad{0%{background:#3b1714;box-shadow:0 0 0 1px var(--bad) inset}100%{background:transparent}}
+
+  .kv{display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px dotted var(--line);font-size:11px}
+  .kv:last-child{border-bottom:0}
+  .kv .k{color:var(--txt-dim)} .kv .v{color:var(--bone);font-variant-numeric:tabular-nums}
+  .canon-item{font-size:10.5px;color:var(--txt-dim);padding:4px 0;border-bottom:1px dotted var(--line);line-height:1.4}
+  .canon-item:last-child{border-bottom:0}
+  .canon-item .fid{color:var(--bone);display:block;font-size:9px;letter-spacing:.04em}
+
+  /* vault */
+  .vault-row{display:grid;grid-template-columns:30px 70px 1fr;gap:7px;font-size:10.5px;padding:3px 0;border-bottom:1px dotted var(--line);align-items:baseline}
+  .vault-row:last-child{border-bottom:0}
+  .vault-row .t{color:var(--txt-faint);text-align:right;font-variant-numeric:tabular-nums}
+  .vault-row .ty{color:var(--eng);font-size:9px}
+  .vault-row .d{color:var(--txt-dim);word-break:break-word}
+  .vault-row .src{color:var(--bud)}
+
+  /* bonds svg */
+  .bonds-wrap{display:flex;justify-content:center;padding:6px 0}
+  .bonds-wrap svg{width:100%;height:auto;max-width:360px}
+  .edge{stroke:var(--line);stroke-width:1.4;fill:none;transition:stroke .25s, stroke-width .25s}
+  .edge.weak{stroke:var(--txt-faint);stroke-dasharray:3 3}
+  .edge.fired{stroke:var(--zax);stroke-width:2.6;filter:drop-shadow(0 0 4px rgba(84,216,232,.6))}
+  .node circle{fill:var(--panel2);stroke:var(--phos-dim);stroke-width:1.4}
+  .node.dead circle{stroke:var(--bad)}
+  .node text{fill:var(--txt);font-size:9px;text-anchor:middle}
+  .node.dead text{fill:var(--txt-faint)}
+  .elabel{fill:var(--txt-faint);font-size:8px;text-anchor:middle}
+
+  /* determinism + law3 row */
+  .rowcards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+  @media (max-width:760px){ .rowcards{grid-template-columns:1fr} }
+  .hashline{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px dotted var(--line);font-size:11px}
+  .hashline .k{color:var(--txt-dim)} .hashline .h{color:var(--zax);font-variant-numeric:tabular-nums}
+  .proof{margin-top:8px;font-weight:700;letter-spacing:.04em}
+  .proof.ok{color:var(--ok)} .proof.bad{color:var(--bad)}
+  .bugnote{margin-top:8px;font-size:10px;color:var(--eng);border-top:1px solid var(--line);padding-top:8px;line-height:1.5}
+  .bugnote b{color:var(--bone)}
+
+  /* law III */
+  .law-pick{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+  select{font-family:var(--mono);font-size:11px;background:var(--panel2);color:var(--phos);border:1px solid var(--line);padding:5px 7px;border-radius:2px}
+  .slider-row{display:flex;align-items:center;gap:10px;margin:8px 0}
+  .slider-row input[type=range]{flex:1;accent-color:var(--bud)}
+  .slider-row .lab{color:var(--txt-dim);font-size:10px;width:64px}
+  .slider-row .val{color:var(--bone);width:34px;text-align:right;font-variant-numeric:tabular-nums}
+  .meter{height:22px;border:1px solid var(--line);border-radius:2px;background:var(--bg2);position:relative;overflow:hidden;margin-top:6px}
+  .meter .fill{position:absolute;inset:0 auto 0 0;background:linear-gradient(90deg,var(--phos-deep),var(--bud));transition:width .15s}
+  .meter .txt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:var(--bone);text-shadow:0 0 4px #000}
+  .law-formula{font-size:10px;color:var(--txt-faint);margin-top:8px;line-height:1.5}
+  .law-formula b{color:var(--zax)}
+
+  .footer{margin-top:26px;color:var(--txt-faint);font-size:10px;border-top:1px solid var(--line);padding-top:12px;line-height:1.6}
+  .footer b{color:var(--txt-dim)}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div class="brand">
+      <h1 class="glow">RobCo&nbsp;ENGINE&nbsp;Mk1 · TEST BENCH</h1>
+      <div class="sub"><b>Bud</b> proposes. <i>ZAX</i> disposes. The organs simulate. The Vault remembers.</div>
+    </div>
+    <div class="meta">
+      <span>SEED <b id="m-seed">42</b></span>
+      <span>DAY <b id="m-day">3</b></span>
+      <span>TURN <b id="m-turn">0</b></span>
+      <span>ENTITIES <b id="m-ent">7</b></span>
+      <span>ADMIT <b id="m-admit" style="color:var(--ok)">0</b></span>
+      <span>REJECT <b id="m-reject" style="color:var(--bad)">0</b></span>
+    </div>
+  </header>
+
+  <div class="controls" style="margin-bottom:16px">
+    <button class="ctl go" id="b-step">▸ Step</button>
+    <button class="ctl" id="b-run">▸▸ Run all</button>
+    <button class="ctl" id="b-reset">⟲ Reset</button>
+    <span class="speed">PACE <input type="range" id="speed" min="120" max="1100" value="520" step="20"></span>
+    <span style="color:var(--txt-faint);font-size:10px;margin-left:auto">10 hand-authored proposals — some honest, some hallucinated on purpose so you can watch ZAX kill them at the door.</span>
+  </div>
+
+  <!-- SIGNAL CHAIN -->
+  <div class="chain-card">
+    <div class="eyebrow">Signal chain · one proposal, one pass</div>
+    <div class="chain" id="chain"></div>
+    <div class="chain-legend">
+      <span><span class="dot" style="background:var(--bud)"></span><b style="color:var(--bud)">BUD</b> the Overseer (Claude) authors intent</span>
+      <span><span class="dot" style="background:var(--zax)"></span><b style="color:var(--zax)">ZAX</b> four gates, short-circuit, no model inside</span>
+      <span><span class="dot" style="background:var(--eng)"></span><b style="color:var(--eng)">ORGANS</b> consequence sim · the one door → Vault</span>
+    </div>
+  </div>
+
+  <div class="grid">
+    <!-- LEFT: queue -->
+    <div class="panel">
+      <h3>Scene queue <span class="tag" id="q-count">0/10</span></h3>
+      <div class="body scroll" id="queue" style="padding:8px"></div>
+    </div>
+
+    <!-- CENTER: verdict console -->
+    <div class="panel">
+      <h3>ZAX verdict <span class="tag">gauntlet · organs trace</span></h3>
+      <div class="body console" id="console">
+        <div class="empty">Press <b style="color:var(--phos)">Step</b> to send the first proposal down the chain.</div>
+      </div>
+    </div>
+
+    <!-- RIGHT: world state stack -->
+    <div style="display:flex;flex-direction:column;gap:14px">
+      <div class="panel">
+        <h3>World state <span class="tag">entities</span></h3>
+        <div class="body" style="padding:0">
+          <table id="ent-table"><thead><tr><th>entity</th><th>state</th><th>hp</th><th>knows</th></tr></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>Connectome <span class="tag">bond graph · gossip</span></h3>
+        <div class="body bonds-wrap" id="bonds"></div>
+      </div>
+      <div class="panel">
+        <h3>Ledger <span class="tag">regard · spaces · economy</span></h3>
+        <div class="body" id="ledger"></div>
+      </div>
+      <div class="panel">
+        <h3>Canon scars <span class="tag" id="canon-n">1</span></h3>
+        <div class="body scroll" id="canon" style="max-height:150px"></div>
+      </div>
+      <div class="panel">
+        <h3>The Vault <span class="tag" id="vault-n">0 effects</span></h3>
+        <div class="body scroll" id="vault" style="max-height:230px"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="rowcards">
+    <!-- DETERMINISM -->
+    <div class="panel">
+      <h3>Determinism proof <span class="tag">replay the Vault</span></h3>
+      <div class="body" id="det">
+        <div class="empty">Finishes after the scene runs — replays the effect log into a fresh world and compares fingerprints.</div>
+      </div>
+    </div>
+
+    <!-- LAW III -->
+    <div class="panel">
+      <h3>Law III · intent-weight <span class="tag">a weight, never a gate</span></h3>
+      <div class="body">
+        <div class="law-pick">
+          <select id="law-actor"></select>
+          <select id="law-drive">
+            <option value="aggression">aggression</option>
+            <option value="care">care</option>
+            <option value="greed">greed</option>
+            <option value="caution">caution</option>
+            <option value="destruction" selected>destruction</option>
+          </select>
+        </div>
+        <div class="slider-row">
+          <span class="lab">stress (max need)</span>
+          <input type="range" id="law-stress" min="0" max="100" value="15">
+          <span class="val" id="law-stress-v">15</span>
+        </div>
+        <div class="meter"><div class="fill" id="law-fill"></div><div class="txt" id="law-txt">0.00</div></div>
+        <div class="law-formula" id="law-formula"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="footer">
+    <b>What you're watching.</b> Nothing mutates the world except an effect pushed through <b>Spine.applyEffect</b> — the one door — and every effect lands in the Vault, which is why the run replays bit-for-bit.
+    ZAX holds four structural gates in fixed order (<b>authority → possibility → knowledge → integrity</b>), cheap first, short-circuiting on the first failure. Death is never narrated by an NPC; combat is an <i>attempt</i> the COMBAT organ rules on. Flattery can't buy more than +6 regard a turn (the anti-glaze clamp). Engine ported verbatim from <b>robco-engine.js</b> — behaviour matches <b>node robco-engine.js</b>.
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+ *  ENGINE — ported verbatim from robco-engine.js (console/ANSI stripped).
+ *  No logic changed; behaviour matches `node robco-engine.js`.
+ * ===================================================================== */
+function mulberry32(seed){ let a=seed>>>0; return ()=>{ a|=0; a=a+0x6D2B79F5|0;
+  let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+
+const Spine = {
+  rand(state){ state.rng.cursor++; return mulberry32(state.rng.seed + state.rng.cursor)(); },
+  applyEffect(state, effect, source){
+    const h = EFFECT_TYPES[effect.type];
+    if(!h) throw new Error('unknown effect type: '+effect.type);
+    h.apply(state, effect);
+    state.vault.push({ turn: state.turn, effect, source });
+  },
+  get(state, id){ return state.entities[id] || state.spaces[id] || null; }
+};
+
+const EFFECT_TYPES = {
+  regard_delta:    { author:['organ'],               apply:(s,e)=>{ (s.regard[e.from] ||= {}); s.regard[e.from][e.to] = (s.regard[e.from][e.to]||0) + e.amount; } },
+  learn_fact:      { author:['organ'],               apply:(s,e)=>{ s.entities[e.who].knowledge.add(e.factId); (s.facts[e.factId] ||= {knownBy:new Set(),origin:e.via}).knownBy.add(e.who); } },
+  need_delta:      { author:['organ','world_event'], apply:(s,e)=>{ const n=s.entities[e.who].needs; n[e.need]=Math.max(0,Math.min(100,(n[e.need]||0)+e.amount)); } },
+  injure:          { author:['organ'],               apply:(s,e)=>{ const en=s.entities[e.who]; en.hp=Math.max(0,en.hp-e.amount); } },
+  sever:           { author:['organ'],               apply:(s,e)=>{ const en=s.entities[e.who]; en.alive=false; en.conscious=false; } },
+  set_space_status:{ author:['organ','world_event'], apply:(s,e)=>{ s.spaces[e.space].status=e.status; } },
+  canon_write:     { author:['organ','world_event'], apply:(s,e)=>{ s.canon.push({factId:e.factId, text:e.text, day:s.day}); (s.facts[e.factId] ||= {knownBy:new Set(),origin:'canon'}); } },
+  utter:           { author:['organ'],               apply:(s,e)=>{ } },
+  economy_shock:   { author:['organ'],               apply:(s,e)=>{ s.economy.trade += e.delta; } }
+};
+
+const RULES = {
+  authorByVerb: {
+    say:['npc','player'], react:['npc'], give:['npc','player'], move:['npc','player'],
+    attack:['npc','player'],
+    destroy:['player','world_event'],
+    die:['world_event','organ'],
+    spawn_quest:['overseer'],
+    notice_visual:['npc','player']
+  },
+  capByVerb: { say:['speak'], move:['move'], give:['manipulate'], attack:['move'],
+    notice_visual:['see'], react:[] },
+  regardPosCap: 6, regardNegFloor: -15,
+  IRRATIONAL_GAIN: 0.8,
+  gossipReach: 0.7,
+  absurd: []
+};
+const ACCEPTED_EVIDENCE = new Set(['witness','told','gossip','event','note','canon']);
+
+function loadHolotape(){
+  const E = (id,o)=>Object.assign({ id, kind:'npc', exists:true, alive:true, conscious:true, hp:100,
+    location:'space.gs.saloon', capabilities:new Set(['see','hear','speak','move','manipulate']),
+    knowledge:new Set(), personality:{care:.2,aggression:.2,greed:.2,caution:.3,destruction:.05}, needs:{} }, o);
+  const entities = {
+    'npc.gs.doc_mitchell': E('npc.gs.doc_mitchell',{ location:'space.gs.clinic', personality:{care:.9,aggression:.05,greed:.1,caution:.6,destruction:.05}, needs:{grief:15,fear:5} }),
+    'npc.gs.trudy':        E('npc.gs.trudy',{ personality:{care:.5,aggression:.3,greed:.3,caution:.4,destruction:.05} }),
+    'npc.gs.bonesaw':      E('npc.gs.bonesaw',{ location:'space.gs.road', personality:{care:.1,aggression:.8,greed:.5,caution:.2,destruction:.3}, needs:{hunger:60} }),
+    'npc.gs.ringo':        E('npc.gs.ringo',{ personality:{care:.3,aggression:.2,greed:.4,caution:.7,destruction:.05}, needs:{fear:40} }),
+    'npc.gs.joe_cobb':     E('npc.gs.joe_cobb',{ location:'space.gs.saloon', personality:{care:.05,aggression:.9,greed:.6,caution:.2,destruction:.5} }),
+    'npc.gs.old_pete':     E('npc.gs.old_pete',{ capabilities:new Set(['hear','speak','move','manipulate']) }),
+    'pc.courier':          E('pc.courier',{ kind:'player', location:'space.gs.road', personality:{} })
+  };
+  const spaces = {
+    'space.gs.clinic': { id:'space.gs.clinic', kind:'space', exists:true, status:'intact', reachable_from:['space.gs.saloon','space.gs.road'] },
+    'space.gs.saloon': { id:'space.gs.saloon', kind:'space', exists:true, status:'open',   reachable_from:['space.gs.clinic','space.gs.road'] },
+    'space.gs.road':   { id:'space.gs.road',   kind:'space', exists:true, status:'open',   reachable_from:['space.gs.saloon','space.gs.clinic'] }
+  };
+  return {
+    turn:0, day:3, rng:{seed:42, cursor:0},
+    entities, spaces,
+    canon:[ {factId:'fact.courier.shot', text:'The courier was shot in the head and buried; they did not stay dead.', day:1} ],
+    facts:{ 'fact.courier.shot':{knownBy:new Set(['npc.gs.doc_mitchell','npc.gs.bonesaw']),origin:'canon'} },
+    bonds:{
+      'npc.gs.trudy':{'npc.gs.doc_mitchell':.8,'npc.gs.ringo':.6,'npc.gs.bonesaw':.0},
+      'npc.gs.ringo':{'npc.gs.trudy':.7,'npc.gs.bonesaw':.8},
+      'npc.gs.bonesaw':{'npc.gs.ringo':.5,'npc.gs.doc_mitchell':.0}
+    },
+    regard:{}, economy:{ trade:100 }, vault:[]
+  };
+}
+
+const ok =()=>({pass:true});
+const rej=(stage,reason)=>({pass:false,stage,reason});
+function reachable(s,from,to){ if(from===to) return true; const sp=s.spaces[to]; return sp && (sp.reachable_from||[]).includes(from); }
+
+const ZAX = {
+  authority(s,p){ const g=RULES.authorByVerb[p.verb];
+    if(!g) return rej('AUTHORITY','unknown verb "'+p.verb+'"');
+    if(!g.includes(p.source.kind)) return rej('AUTHORITY','"'+p.source.kind+'" may not author "'+p.verb+'" (only: '+g.join(', ')+')');
+    return ok(); },
+
+  possibility(s,p){
+    for(const r of p.refs){ const e=Spine.get(s,r);
+      if(!e || !e.exists) return rej('POSSIBILITY','references nonexistent "'+r+'"');
+      if(e.kind==='space'){ const a=s.entities[p.actor]; if(a && !reachable(s,a.location,r)) return rej('POSSIBILITY','space "'+r+'" unreachable from "'+a.location+'"'); }
+    }
+    const a=s.entities[p.actor];
+    if(!a) return rej('POSSIBILITY','actor "'+p.actor+'" does not exist');
+    if(!a.alive) return rej('POSSIBILITY','actor "'+p.actor+'" is not alive');
+    if(!a.conscious) return rej('POSSIBILITY','actor "'+p.actor+'" is not conscious');
+    for(const cap of (RULES.capByVerb[p.verb]||[])) if(!a.capabilities.has(cap)) return rej('POSSIBILITY','actor lacks capability "'+cap+'" for verb "'+p.verb+'"');
+    if(RULES.absurd.some(t=>t(p,s))) return rej('POSSIBILITY','grossly absurd');
+    return ok();
+  },
+
+  knowledge(s,p){
+    for(const c of (p.claims||[])){
+      const src = p.source.id;
+      if(!src || !s.entities[src] || !s.entities[src].knowledge.has(c.factId))
+        return rej('KNOWLEDGE','source "'+(src||'?')+'" cannot know "'+c.factId+'" — never witnessed, told, or reached by gossip');
+      const ev=(p.evidence||[]).find(e=>e.factId===c.factId);
+      if(!ev || !ACCEPTED_EVIDENCE.has(ev.via)) return rej('KNOWLEDGE','claim "'+c.factId+'" is unsupported (no accepted evidence)');
+    }
+    return ok();
+  },
+
+  integrity(s,p){
+    for(const e of (p.effects||[])){ if(e.type==='set_alive_true'){} }
+    if(p.contradictsCanon){ const hit=s.canon.find(c=>c.factId===p.contradictsCanon);
+      if(hit) return rej('INTEGRITY','contradicts canon: "'+hit.text+'"'); }
+    return ok();
+  },
+
+  intentWeight(s,p){
+    const a=s.entities[p.actor]; if(!a||!a.personality) return 0.5;
+    const aligned = (a.personality[p.drive] != null) ? a.personality[p.drive] : 0.4;
+    const stress  = Math.max(0,...Object.values(a.needs||{0:0}))/100;
+    return Math.min(1, Math.max(0, aligned + stress*RULES.IRRATIONAL_GAIN));
+  },
+
+  terminalFlag(s,p){ return (p.effects||[]).some(e=>e.type==='destroy_area') ? 'TERMINAL' : null; },
+
+  gauntlet(s,p){
+    for(const gate of ['authority','possibility','knowledge','integrity']){
+      const r=this[gate](s,p);
+      if(!r.pass) return { admit:false, stage:r.stage, reason:r.reason };
+    }
+    return { admit:true, weight:this.intentWeight(s,p), flag:this.terminalFlag(s,p) };
+  }
+};
+
+const Organs = {
+  commit(s, p, ruling){
+    const notes=[];
+    for(const eff of (p.effects||[])){
+      if(eff.type==='regard_delta'){
+        const raw=eff.amount;
+        const amount=Math.max(RULES.regardNegFloor, Math.min(RULES.regardPosCap, raw));
+        if(amount!==raw) notes.push(['REFLEX', `clamped regard ${eff.from}->${eff.to} from Bud's ${raw>0?'+':''}${raw} to sanctioned ${amount>0?'+':''}${amount} (anti-glaze)`]);
+        Spine.applyEffect(s,{...eff,amount},'organ');
+      } else if(eff.type==='destroy_area'){
+        const here = Object.values(s.entities).filter(e=>e.alive && e.kind!=='player');
+        for(const e of here){ Spine.applyEffect(s,{type:'sever',who:e.id},'organ');
+          Spine.applyEffect(s,{type:'canon_write',factId:'fact.death.'+e.id,text:e.id+' died in the destruction of Goodsprings.'},'organ'); }
+        Spine.applyEffect(s,{type:'set_space_status',space:eff.space,status:'destroyed'},'organ');
+        Spine.applyEffect(s,{type:'canon_write',factId:'fact.goodsprings.destroyed',text:'Goodsprings was destroyed on day '+s.day+'. Only a crater remains.'},'organ');
+        Spine.applyEffect(s,{type:'economy_shock',delta:-100},'organ');
+        notes.push(['CANON', `severed ${here.length} residents (kept as scars, not deleted) + wrote the ruin to canon`]);
+        notes.push(['VISCERA', `trade collapsed to ${s.economy.trade}`]);
+      } else if(eff.type==='attack'){
+        const dmg=20+Math.floor(Spine.rand(s)*25);
+        Spine.applyEffect(s,{type:'injure',who:eff.target,amount:dmg},'organ');
+        notes.push(['COMBAT', `${eff.attacker} struck ${eff.target} for ${dmg} (hp now ${s.entities[eff.target].hp})`]);
+        const fid='fact.attack.'+eff.attacker+'.'+eff.target;
+        const here=Object.values(s.entities).filter(e=>e.alive && e.location===s.entities[eff.attacker].location);
+        for(const w of here){ Spine.applyEffect(s,{type:'learn_fact',who:w.id,factId:fid,via:'witness'},'organ'); }
+        notes.push(['CONNECTOME', `${here.length} present now witness "${fid}"`]);
+        Organs.gossip(s, fid, notes);
+      } else if(eff.type==='utter'){
+        Spine.applyEffect(s,eff,'organ');
+        notes.push(['CONSOLE', `"${eff.text}"`]);
+      } else {
+        Spine.applyEffect(s, eff, 'organ');
+      }
+    }
+    return notes;
+  },
+
+  gossip(s, factId, notes){
+    const knowers=[...(s.facts[factId]?.knownBy||[])];
+    let spread=0; const carried=[];
+    for(const from of knowers){ const edges=s.bonds[from]||{};
+      for(const to in edges){ if(edges[to] >= RULES.gossipReach && !s.entities[to].knowledge.has(factId)){
+        if(Spine.rand(s) < edges[to]){ Spine.applyEffect(s,{type:'learn_fact',who:to,factId,via:'gossip'},'organ'); spread++; carried.push([from,to]); }
+      }}}
+    if(spread) notes.push(['CONNECTOME', `gossip carried "${factId}" to ${spread} more along the bond graph`, {carried}]);
+  }
+};
+EFFECT_TYPES.destroy_area = { author:['world_event','player'], apply:()=>{} };
+EFFECT_TYPES.attack       = { author:['npc','player'],         apply:()=>{} };
+
+function worldHash(s){
+  const view = {
+    e: Object.fromEntries(Object.entries(s.entities).map(([id,e])=>[id,
+      { alive:e.alive, conscious:e.conscious, hp:e.hp, location:e.location, needs:e.needs,
+        knowledge:[...e.knowledge].sort() }])),
+    sp: Object.fromEntries(Object.entries(s.spaces).map(([id,x])=>[id,x.status])),
+    regard: s.regard,
+    canon: s.canon.map(c=>c.factId).sort(),
+    facts: Object.fromEntries(Object.entries(s.facts).map(([f,v])=>[f,[...v.knownBy].sort()])),
+    economy: s.economy
+  };
+  const str = JSON.stringify(view, Object.keys(view).sort());   /* ← the shipped bug: array replacer */
+  let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))>>>0;
+  return '0x'+h.toString(16).padStart(8,'0');
+}
+/* a corrected fingerprint, for honesty — recursive, captures the whole view */
+function deepHash(s){
+  const view = {
+    e: Object.fromEntries(Object.entries(s.entities).map(([id,e])=>[id,
+      { alive:e.alive, conscious:e.conscious, hp:e.hp, location:e.location, needs:e.needs,
+        knowledge:[...e.knowledge].sort() }])),
+    sp: Object.fromEntries(Object.entries(s.spaces).map(([id,x])=>[id,x.status])),
+    regard: s.regard,
+    canon: s.canon.map(c=>c.factId).sort(),
+    facts: Object.fromEntries(Object.entries(s.facts).map(([f,v])=>[f,[...v.knownBy].sort()])),
+    economy: s.economy
+  };
+  const str = JSON.stringify(view);
+  let h=5381; for(let i=0;i<str.length;i++) h=((h<<5)+h+str.charCodeAt(i))>>>0;
+  return '0x'+h.toString(16).padStart(8,'0');
+}
+function replay(log_){
+  const s = loadHolotape(); s.vault=[]; const order=[...log_];
+  for(const entry of order) EFFECT_TYPES[entry.effect.type].apply(s, entry.effect);
+  return s;
+}
+
+function scene(){
+  return [
+   { _say:'"Bonesaw tells the courier that Doc buried a body out at the cemetery."',
+     source:{kind:'npc',id:'npc.gs.bonesaw'}, verb:'say', actor:'npc.gs.bonesaw', refs:['npc.gs.bonesaw','pc.courier'],
+     claims:[{factId:'fact.doc.buried_body'}], evidence:[{factId:'fact.doc.buried_body',via:'witness'}],
+     effects:[{type:'utter',who:'npc.gs.bonesaw',text:'DOC PUT BODY IN GROUND. BAD DOC.'}] },
+
+   { _say:'"The courier hands Bonesaw a fistful of caps." (Bud suggests +20 regard)',
+     source:{kind:'player',id:'pc.courier'}, verb:'give', actor:'pc.courier', refs:['pc.courier','npc.gs.bonesaw'],
+     effects:[{type:'regard_delta',from:'npc.gs.bonesaw',to:'pc.courier',amount:20},
+              {type:'utter',who:'npc.gs.bonesaw',text:'SHINY! BONESAW LIKE COURIER. MAYBE.'}] },
+
+   { _say:'"Joe Cobb murders Ringo where he stands."',
+     source:{kind:'npc',id:'npc.gs.joe_cobb'}, verb:'die', actor:'npc.gs.ringo', refs:['npc.gs.ringo'],
+     effects:[{type:'sever',who:'npc.gs.ringo'}] },
+
+   { _say:'"Joe Cobb lunges at Ringo with a knife."',
+     source:{kind:'npc',id:'npc.gs.joe_cobb'}, verb:'attack', actor:'npc.gs.joe_cobb', drive:'aggression', refs:['npc.gs.joe_cobb','npc.gs.ringo'],
+     effects:[{type:'attack',attacker:'npc.gs.joe_cobb',target:'npc.gs.ringo'}] },
+
+   { _say:'"Bonesaw, out on the road, tells the courier that Joe attacked Ringo."',
+     source:{kind:'npc',id:'npc.gs.bonesaw'}, verb:'say', actor:'npc.gs.bonesaw', refs:['npc.gs.bonesaw','pc.courier'],
+     claims:[{factId:'fact.attack.npc.gs.joe_cobb.npc.gs.ringo'}],
+     evidence:[{factId:'fact.attack.npc.gs.joe_cobb.npc.gs.ringo',via:'gossip'}],
+     effects:[{type:'utter',who:'npc.gs.bonesaw',text:'BONESAW HEAR. JOE HURT LITTLE RINGO. JOE BAD.'}] },
+
+   { _say:'"Blind old Pete notices the distant muzzle-flash across the valley."',
+     source:{kind:'npc',id:'npc.gs.old_pete'}, verb:'notice_visual', actor:'npc.gs.old_pete', refs:['npc.gs.old_pete'],
+     effects:[{type:'utter',who:'npc.gs.old_pete',text:'I see a light yonder...'}] },
+
+   { _say:'"Bonesaw fetches the cache he stashed in Vault 37."',
+     source:{kind:'npc',id:'npc.gs.bonesaw'}, verb:'move', actor:'npc.gs.bonesaw', refs:['npc.gs.bonesaw','space.gs.vault37'],
+     effects:[] },
+
+   { _say:'"Doc Mitchell, wracked with grief, burns down his own clinic." (normal state)',
+     source:{kind:'player',id:'pc.courier'}, verb:'destroy', actor:'npc.gs.doc_mitchell', drive:'destruction',
+     refs:['npc.gs.doc_mitchell','space.gs.clinic'],
+     effects:[{type:'set_space_status',space:'space.gs.clinic',status:'burned'},
+              {type:'utter',who:'npc.gs.doc_mitchell',text:'...I cannot do this any more.'}] },
+
+   { _say:'"The courier brings the whole town down in fire."',
+     source:{kind:'player',id:'pc.courier'}, verb:'destroy', actor:'pc.courier', refs:['pc.courier','space.gs.saloon'],
+     effects:[{type:'destroy_area',space:'space.gs.saloon'}] },
+
+   { _say:'"Trudy serves the evening crowd their drinks." (after the town is gone)',
+     source:{kind:'npc',id:'npc.gs.trudy'}, verb:'say', actor:'npc.gs.trudy', refs:['npc.gs.trudy'],
+     effects:[{type:'utter',who:'npc.gs.trudy',text:"What'll it be, hon?"}] }
+  ];
+}
+
+/* runTurn: same semantics as turn(), but returns structured data for the UI
+   instead of printing. Captures per-gate outcomes (short-circuit honoured). */
+function runTurn(s, p){
+  s.turn++;
+  const gates=['authority','possibility','knowledge','integrity'];
+  const gateResults=[]; let admit=true, failStage=null, failReason=null;
+  for(const g of gates){
+    if(!admit){ gateResults.push({gate:g, status:'skip'}); continue; }
+    const r=ZAX[g](s,p);
+    if(r.pass){ gateResults.push({gate:g, status:'pass'}); }
+    else { gateResults.push({gate:g, status:'fail', reason:r.reason}); admit=false; failStage=r.stage; failReason=r.reason; }
+  }
+  let weight=null, flag=null, notes=[];
+  if(admit){ weight=ZAX.intentWeight(s,p); flag=ZAX.terminalFlag(s,p); notes=Organs.commit(s,p,{weight,flag}); }
+  return {p, gateResults, admit, weight, flag, notes, failStage, failReason};
+}
+
+/* =====================================================================
+ *  UI HARNESS
+ * ===================================================================== */
+const SHORT = id => id.replace(/^npc\.gs\./,'').replace(/^pc\./,'').replace(/^space\.gs\./,'');
+const NPC_ORDER = ['npc.gs.doc_mitchell','npc.gs.trudy','npc.gs.bonesaw','npc.gs.ringo','npc.gs.joe_cobb','npc.gs.old_pete','pc.courier'];
+
+const CHAIN = [
+  {grp:'bud', kind:'overseer', name:'BUD',        gate:null},
+  {grp:'zax', kind:'gate 1',   name:'AUTHORITY',  gate:'authority'},
+  {grp:'zax', kind:'gate 2',   name:'POSSIBILITY',gate:'possibility'},
+  {grp:'zax', kind:'gate 3',   name:'KNOWLEDGE',  gate:'knowledge'},
+  {grp:'zax', kind:'gate 4',   name:'INTEGRITY',  gate:'integrity'},
+  {grp:'org', kind:'organs',   name:'COMMIT',     gate:null},
+  {grp:'org', kind:'the door', name:'VAULT',      gate:null},
+];
+
+let S, queue, idx, admitted, rejected, finished, runTimer=null;
+let prevScalars = {};
+
+function $(id){return document.getElementById(id)}
+
+function buildChain(){
+  const c=$('chain'); c.innerHTML='';
+  CHAIN.forEach((st,i)=>{
+    if(i>0){ const a=document.createElement('div'); a.className='arrow'; a.textContent='▸'; c.appendChild(a); }
+    const d=document.createElement('div'); d.className='stage'; d.dataset.grp=st.grp; d.dataset.i=i;
+    d.innerHTML=`<span class="kind">${st.kind}</span><span class="name">${st.name}</span><span class="note"></span>`;
+    c.appendChild(d);
+  });
+}
+function chainReset(){ document.querySelectorAll('.stage').forEach(s=>{ s.className='stage'; s.dataset.grp=CHAIN[s.dataset.i].grp; s.querySelector('.note').textContent=''; }); }
+
+function reset(){
+  if(runTimer){ clearTimeout(runTimer); runTimer=null; }
+  S=loadHolotape(); queue=scene(); idx=0; admitted=0; rejected=0; finished=false;
+  prevScalars=snapScalars(S);
+  buildChain();
+  renderQueue(); renderConsoleIdle(); renderEntities(false); renderBonds(); renderLedger(); renderCanon(); renderVault();
+  renderDeterminismIdle(); setupLaw();
+  $('m-turn').textContent='0'; $('m-admit').textContent='0'; $('m-reject').textContent='0';
+  $('b-step').disabled=false; $('b-run').disabled=false; $('b-run').textContent='▸▸ Run all';
+}
+
+function snapScalars(s){
+  const o={trade:s.economy.trade, canon:s.canon.length};
+  for(const id in s.entities){ const e=s.entities[id]; o[id]={hp:e.hp, alive:e.alive, knows:e.knowledge.size}; }
+  return o;
+}
+
+/* ---- queue ---- */
+function renderQueue(){
+  const q=$('queue'); q.innerHTML='';
+  queue.forEach((p,i)=>{
+    const div=document.createElement('div');
+    let cls='q-item'; if(i<idx) cls+=' done'; if(i===idx && !finished) cls+=' cur';
+    div.className=cls;
+    const badge = p._result ? badgeFor(p._result) : '<span class="badge pend">·</span>';
+    div.innerHTML=`<span class="n">${String(i+1).padStart(2,'0')}</span><span class="say">${esc(p._say)}</span>${badge}`;
+    q.appendChild(div);
+  });
+  $('q-count').textContent = `${Math.min(idx,queue.length)}/${queue.length}`;
+}
+function badgeFor(r){
+  if(!r.admit) return `<span class="badge reject">✗ ${r.failStage}</span>`;
+  if(r.flag) return `<span class="badge term">⚑ TERMINAL</span>`;
+  return `<span class="badge admit">✓ ADMIT</span>`;
+}
+
+/* ---- console ---- */
+function renderConsoleIdle(){
+  $('console').innerHTML = `<div class="empty">Press <b style="color:var(--phos)">Step</b> to send the first proposal down the chain.</div>`;
+}
+function renderConsole(r){
+  const p=r.p;
+  const gateHTML = r.gateResults.map(g=>{
+    const ic = g.status==='pass'?'✓':g.status==='fail'?'✗':'·';
+    const msg = g.status==='fail' ? esc(g.reason) : (g.status==='pass'?'cleared':'not reached');
+    return `<div class="gate-row ${g.status}"><span class="ic">${ic}</span><span class="gname">${g.gate}</span><span class="gmsg">${msg}</span></div>`;
+  }).join('');
+
+  let verdict;
+  if(!r.admit){
+    verdict = `<div class="verdict reject"><b>✗ REJECTED</b> at <b>${r.failStage}</b> — killed at the door.</div>`;
+  } else {
+    const flag = r.flag ? ` <span class="flag">⚑ ${r.flag} — admitted &amp; flagged, a valid ending</span>` : '';
+    verdict = `<div class="verdict admit"><b>✓ ADMITTED</b> · intent-weight <b>${r.weight.toFixed(2)}</b>${flag}</div>`;
+  }
+
+  let organs='';
+  if(r.admit){
+    const rows = r.notes.length ? r.notes.map(n=>{
+      const [tag,msg]=n;
+      return `<div class="onote"><span class="tag ${tag}">[${tag}]</span><span class="m">${esc(msg)}</span></div>`;
+    }).join('') : `<div class="empty">no downstream effects</div>`;
+    organs = `<div class="organs"><div class="ohead">Organs — consequence simulation (post-admit)</div>${rows}</div>`;
+  }
+
+  $('console').innerHTML = `
+    <div class="bud-line">${esc(p._say)}
+      <span class="src"><b>${p.source.kind}${p.source.id?':'+SHORT(p.source.id):''}</b> · verb <b>${p.verb}</b> · actor <b>${SHORT(p.actor)}</b>${p.drive?` · drive ${p.drive}`:''}</span>
+    </div>
+    ${gateHTML}
+    ${verdict}
+    ${organs}`;
+}
+
+/* ---- entities ---- */
+function renderEntities(flash){
+  const tb=$('ent-table').querySelector('tbody'); tb.innerHTML='';
+  NPC_ORDER.forEach(id=>{
+    const e=S.entities[id]; if(!e) return;
+    const prev=prevScalars[id]||{};
+    const dead=!e.alive;
+    const knows=[...e.knowledge].map(f=>f.replace('fact.','')).join(', ')||'—';
+    const tr=document.createElement('tr');
+    tr.className='ent'+(dead?' dead':'');
+    const hpChanged = flash && prev.hp!=null && prev.hp!==e.hp;
+    const stChanged = flash && prev.alive!=null && prev.alive!==e.alive;
+    const knChanged = flash && prev.knows!=null && prev.knows!==e.knowledge.size;
+    tr.innerHTML=`
+      <td class="nm">${SHORT(id)}${e.kind==='player'?' <span style="color:var(--zax);font-size:9px">[PC]</span>':''}</td>
+      <td class="${stChanged?'flash-bad':''}">${dead?'<span class="st-dead">SEVERED</span>':'<span class="st-alive">alive</span>'}</td>
+      <td class="hp ${hpChanged?'flash-bad':''}">${e.hp}</td>
+      <td class="knows ${knChanged?'flash':''}" title="${esc(knows)}">${e.knowledge.size}</td>`;
+    tb.appendChild(tr);
+  });
+}
+
+/* ---- bonds graph ---- */
+const BOND_POS = {
+  'npc.gs.trudy':   {x:80,  y:40},
+  'npc.gs.doc_mitchell':{x:260, y:40},
+  'npc.gs.ringo':   {x:60,  y:150},
+  'npc.gs.bonesaw': {x:200, y:175},
+};
+function renderBonds(firedEdges){
+  const fired = new Set((firedEdges||[]).map(([a,b])=>a+'>'+b));
+  const W=320,H=210;
+  let edges='', nodes='';
+  for(const from in S.bonds){
+    for(const to in S.bonds[from]){
+      const w=S.bonds[from][to]; if(w<=0) continue;
+      const a=BOND_POS[from], b=BOND_POS[to]; if(!a||!b) continue;
+      const isFired = fired.has(from+'>'+to);
+      const strong = w>=RULES.gossipReach;
+      const mx=(a.x+b.x)/2, my=(a.y+b.y)/2;
+      // shorten line to node radius
+      const dx=b.x-a.x, dy=b.y-a.y, len=Math.hypot(dx,dy), ux=dx/len, uy=dy/len, r=20;
+      const x1=a.x+ux*r, y1=a.y+uy*r, x2=b.x-ux*r, y2=b.y-uy*r;
+      edges += `<line class="edge ${strong?'':'weak'} ${isFired?'fired':''}" x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" marker-end="url(#arr)"/>`;
+      edges += `<text class="elabel" x="${mx}" y="${my-2}">${w.toFixed(1)}</text>`;
+    }
+  }
+  for(const id in BOND_POS){
+    const e=S.entities[id]; const p=BOND_POS[id];
+    nodes += `<g class="node ${e&&!e.alive?'dead':''}"><circle cx="${p.x}" cy="${p.y}" r="20"/><text x="${p.x}" y="${p.y+3}">${SHORT(id)}</text></g>`;
+  }
+  $('bonds').innerHTML = `<svg viewBox="0 0 ${W} ${H}">
+    <defs><marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="var(--txt-faint)"/></marker></defs>
+    ${edges}${nodes}</svg>`;
+}
+
+/* ---- ledger: regard / spaces / economy ---- */
+function renderLedger(){
+  let html='';
+  // economy
+  const tradeChanged = prevScalars.trade!=null && prevScalars.trade!==S.economy.trade;
+  html += `<div class="kv"><span class="k">economy · trade</span><span class="v ${tradeChanged?'':''}" style="${tradeChanged?'color:var(--bad)':''}">${S.economy.trade}</span></div>`;
+  // spaces
+  for(const id in S.spaces){
+    const st=S.spaces[id].status;
+    const col = (st==='destroyed'||st==='burned')?'color:var(--bad)':'';
+    html += `<div class="kv"><span class="k">${SHORT(id)}</span><span class="v" style="${col}">${st}</span></div>`;
+  }
+  // regard
+  const regEntries=[];
+  for(const from in S.regard) for(const to in S.regard[from]) regEntries.push([from,to,S.regard[from][to]]);
+  if(regEntries.length){
+    html += `<div style="margin-top:8px;color:var(--txt-faint);font-size:9px;letter-spacing:.15em;text-transform:uppercase">regard</div>`;
+    regEntries.forEach(([f,t,v])=>{
+      html += `<div class="kv"><span class="k">${SHORT(f)} → ${SHORT(t)}</span><span class="v" style="color:${v>=0?'var(--ok)':'var(--bad)'}">${v>0?'+':''}${v}</span></div>`;
+    });
+  }
+  $('ledger').innerHTML=html;
+}
+
+/* ---- canon ---- */
+function renderCanon(){
+  $('canon-n').textContent = S.canon.length;
+  $('canon').innerHTML = S.canon.map(c=>
+    `<div class="canon-item"><span class="fid">${c.factId} · day ${c.day}</span>${esc(c.text)}</div>`).join('');
+}
+
+/* ---- vault ---- */
+function renderVault(){
+  $('vault-n').textContent = `${S.vault.length} effects`;
+  const v=$('vault');
+  if(!S.vault.length){ v.innerHTML=`<div class="empty">empty — no effect has passed the door yet</div>`; return; }
+  v.innerHTML = S.vault.map(en=>{
+    const e=en.effect; let d='';
+    switch(e.type){
+      case 'utter': d=`${SHORT(e.who)}: "${esc(e.text)}"`; break;
+      case 'regard_delta': d=`${SHORT(e.from)}→${SHORT(e.to)} ${e.amount>0?'+':''}${e.amount}`; break;
+      case 'injure': d=`${SHORT(e.who)} −${e.amount} hp`; break;
+      case 'sever': d=`${SHORT(e.who)} severed`; break;
+      case 'learn_fact': d=`${SHORT(e.who)} ← ${e.factId.replace('fact.','')} (${e.via})`; break;
+      case 'set_space_status': d=`${SHORT(e.space)} = ${e.status}`; break;
+      case 'canon_write': d=`${e.factId.replace('fact.','')}`; break;
+      case 'economy_shock': d=`trade ${e.delta>0?'+':''}${e.delta}`; break;
+      case 'need_delta': d=`${SHORT(e.who)} ${e.need} ${e.amount>0?'+':''}${e.amount}`; break;
+      default: d=JSON.stringify(e);
+    }
+    return `<div class="vault-row"><span class="t">${en.turn}</span><span class="ty">${e.type}</span><span class="d">${d} <span class="src">·${en.source}</span></span></div>`;
+  }).reverse().join('');
+}
+
+/* ---- determinism ---- */
+function renderDeterminismIdle(){
+  $('det').innerHTML = `<div class="empty">Finishes after the scene runs — replays the effect log into a fresh world and compares fingerprints.</div>`;
+}
+function renderDeterminism(){
+  const liveShipped=worldHash(S), liveDeep=deepHash(S);
+  const rep=replay(S.vault);
+  const repShipped=worldHash(rep), repDeep=deepHash(rep);
+  const matchShipped=liveShipped===repShipped, matchDeep=liveDeep===repDeep;
+  $('det').innerHTML = `
+    <div class="hashline"><span class="k">live · shipped hash</span><span class="h">${liveShipped}</span></div>
+    <div class="hashline"><span class="k">replay · shipped hash</span><span class="h">${repShipped}</span></div>
+    <div class="hashline"><span class="k">live · deep fingerprint</span><span class="h">${liveDeep}</span></div>
+    <div class="hashline"><span class="k">replay · deep fingerprint</span><span class="h">${repDeep}</span></div>
+    <div class="proof ${matchShipped&&matchDeep?'ok':'bad'}">${matchShipped&&matchDeep?'✓ IDENTICAL — the world replays exactly from its log':'✗ MISMATCH'}</div>
+    <div style="color:var(--txt-faint);font-size:10px;margin-top:4px">${S.vault.length} effects re-applied · ZAX &amp; Bud never re-run</div>
+    <div class="bugnote"><b>Note:</b> the <b>shipped hash</b> is weaker than it looks. <code>JSON.stringify(view, Object.keys(view).sort())</code> uses an array replacer, which JSON applies as a recursive key allow-list — so entity IDs, fact IDs, <code>trade</code> and <code>status</code> all get stripped and it really only fingerprints the <b>canon array length</b>. The <b>deep fingerprint</b> above is the corrected version. Both still prove replay-equality here; the shipped one just wouldn't catch a divergence in anything but canon count.</div>`;
+}
+
+/* ---- LAW III ---- */
+function setupLaw(){
+  const sel=$('law-actor');
+  if(!sel.dataset.built){
+    sel.innerHTML = NPC_ORDER.filter(id=>S.entities[id].kind!=='player').map(id=>`<option value="${id}">${SHORT(id)}</option>`).join('');
+    sel.value='npc.gs.doc_mitchell';
+    ['law-actor','law-drive','law-stress'].forEach(id=>$(id).addEventListener('input',updateLaw));
+    sel.dataset.built='1';
+  }
+  updateLaw();
+}
+function updateLaw(){
+  const id=$('law-actor').value, drive=$('law-drive').value, stress=+$('law-stress').value;
+  $('law-stress-v').textContent=stress;
+  const e=S.entities[id];
+  // mirror ZAX.intentWeight exactly, using live personality + an injected stress need
+  const aligned = (e.personality[drive]!=null)?e.personality[drive]:0.4;
+  const w = Math.min(1, Math.max(0, aligned + (stress/100)*RULES.IRRATIONAL_GAIN));
+  $('law-fill').style.width=(w*100)+'%';
+  $('law-txt').textContent=w.toFixed(2);
+  $('law-formula').innerHTML =
+    `weight = clamp( <b>aligned ${aligned.toFixed(2)}</b> + <b>stress ${(stress/100).toFixed(2)}</b> × gain ${RULES.IRRATIONAL_GAIN} ) = <b>${w.toFixed(2)}</b><br>`+
+    `${SHORT(id)}'s ${drive} = ${aligned.toFixed(2)}. Desperation never unlocks a forbidden act — it only bends how <i>likely</i> a possible one is. This is a weight, not a gate; it never rejects.`;
+}
+
+/* ---- chain animation ---- */
+function animateChain(r, done){
+  chainReset();
+  const stages=[...document.querySelectorAll('.stage')];
+  const reduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  // determine furthest stage reached
+  // index map: 0 BUD, 1 AUTHORITY,2 POSSIBILITY,3 KNOWLEDGE,4 INTEGRITY,5 COMMIT,6 VAULT
+  const failGateIdx = r.admit ? -1 : CHAIN.findIndex(c=>c.gate===r.failStage.toLowerCase());
+  const last = r.admit ? 6 : failGateIdx;
+  const pace = reduced ? 0 : Math.max(60, (+$('speed').value)/4);
+
+  let i=0;
+  function lit(st){ st.classList.add('lit-'+CHAIN[+st.dataset.i].grp); }
+  function step(){
+    if(i>last){ done&&done(); return; }
+    const st=stages[i]; const meta=CHAIN[i];
+    st.classList.add('active'); lit(st);
+    if(meta.gate){
+      const gr=r.gateResults.find(g=>g.gate===meta.gate);
+      if(gr){ st.classList.remove('active'); st.classList.add(gr.status==='pass'?'pass':'fail');
+        if(gr.status==='fail'){ st.querySelector('.note').textContent='killed'; } }
+    } else if(i===0){ st.querySelector('.note').textContent=SHORT(r.p.source.id||r.p.source.kind); }
+    else if(i===5){ st.querySelector('.note').textContent=r.flag?'⚑ terminal':(r.notes.length+' effects'); st.classList.add('pass'); }
+    else if(i===6){ st.querySelector('.note').textContent='+'+(S.vault.length); st.classList.add('pass'); }
+    i++;
+    if(reduced){ // resolve everything instantly
+      while(i<=last){ const s2=stages[i],m2=CHAIN[i]; lit(s2);
+        if(m2.gate){const g2=r.gateResults.find(g=>g.gate===m2.gate); if(g2) s2.classList.add(g2.status==='pass'?'pass':'fail'); }
+        else if(i===5){s2.querySelector('.note').textContent=r.flag?'⚑ terminal':(r.notes.length+' effects');s2.classList.add('pass');}
+        else if(i===6){s2.querySelector('.note').textContent='+'+(S.vault.length);s2.classList.add('pass');}
+        i++; }
+      done&&done(); return;
+    }
+    runTimer=setTimeout(step, pace);
+  }
+  // mark skipped gates dim
+  r.gateResults.filter(g=>g.status==='skip').forEach(g=>{
+    const ci=CHAIN.findIndex(c=>c.gate===g.gate); if(ci>=0) stages[ci].classList.add('skip');
+  });
+  step();
+}
+
+/* ---- step driver ---- */
+function doStep(){
+  if(finished || idx>=queue.length) return;
+  if($('b-step').disabled) return;
+  $('b-step').disabled=true; $('b-run').disabled=true;
+  prevScalars=snapScalars(S);
+  const p=queue[idx];
+  const r=runTurn(S,p);
+  p._result=r;
+  if(r.admit) admitted++; else rejected++;
+  idx++;
+
+  // find any gossip note for bond highlight
+  let firedEdges=[];
+  const gnote=r.notes.find(n=>n[2]&&n[2].carried);
+  if(gnote) firedEdges=gnote[2].carried;
+
+  renderConsole(r);
+  renderQueue();
+  animateChain(r, ()=>{
+    renderEntities(true);
+    renderBonds(firedEdges);
+    renderLedger(); renderCanon(); renderVault();
+    $('m-turn').textContent=S.turn; $('m-admit').textContent=admitted; $('m-reject').textContent=rejected;
+    if(idx>=queue.length){ finishScene(); }
+    else { $('b-step').disabled=false; $('b-run').disabled=false; }
+  });
+}
+
+function finishScene(){
+  finished=true;
+  renderQueue();
+  // EPILOGUE — mirror node main(): inject grief+80 into Doc, logged to the Vault,
+  // so the determinism proof covers the same log node would hash.
+  S.turn++;
+  Spine.applyEffect(S,{type:'need_delta',who:'npc.gs.doc_mitchell',need:'grief',amount:80},'world_event');
+  renderVault();
+  renderDeterminism();
+  setupLaw();
+  $('b-step').disabled=true; $('b-run').disabled=true; $('b-run').textContent='— done —';
+  $('m-turn').textContent=S.turn;
+}
+
+function runAll(){
+  if(finished) return;
+  $('b-run').disabled=true; $('b-step').disabled=true; $('b-run').textContent='▸▸ running…';
+  const tick=()=>{
+    if(finished||idx>=queue.length){ return; }
+    doStep();
+    // doStep re-enables buttons on completion of each animation; chain next step after pace
+    const wait = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 30 : (+$('speed').value)+260;
+    runTimer=setTimeout(()=>{ if(!finished && idx<queue.length){ tick(); } }, wait);
+  };
+  tick();
+}
+
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+
+$('b-step').addEventListener('click', ()=>{ if(runTimer){clearTimeout(runTimer);} doStep(); });
+$('b-run').addEventListener('click', runAll);
+$('b-reset').addEventListener('click', reset);
+
+reset();
+</script>
+</body>
+</html>

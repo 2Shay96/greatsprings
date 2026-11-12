@@ -1,0 +1,12 @@
+<Project Sdk="Godot.NET.Sdk/4.7.0">
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <EnableDynamicLoading>true</EnableDynamicLoading>
+    <RootNamespace>RobCoGodot</RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <!-- The engine. Godot is a client of it, never the other way round. -->
+    <ProjectReference Include="..\robco-runtime\RobCo.Runtime.csproj" />
+  </ItemGroup>
+</Project>
