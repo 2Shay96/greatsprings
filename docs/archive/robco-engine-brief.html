@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RobCo Engine — Framework Brief</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pip:#46e878;--bright:#b6ffd2;--dim:#2a8a52;--faint:#123a24;--bg:#03100a;--bg2:#061a10;--panel:#082315;--code:#04150d;
+  --bud:#c08bff;--zax:#5fd9ff;--eng:#ffb259;--bone:#e8f5ee;--red:#ff6a5e;
+  --mono:'Share Tech Mono',ui-monospace,monospace;--crt:'VT323',var(--mono)}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:#cfeede;font-family:var(--mono);font-size:16px;line-height:1.7;
+  background-image:radial-gradient(140% 80% at 50% 0%,rgba(70,232,120,.05),transparent 55%)}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:90;background:repeating-linear-gradient(0deg,rgba(0,0,0,.10) 0 1px,transparent 1px 3px);opacity:.4}
+#top{position:sticky;top:0;z-index:80;display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:9px 22px;background:rgba(4,17,10,.96);border-bottom:1px solid var(--faint);backdrop-filter:blur(3px)}
+#top .b{font-family:var(--crt);font-size:23px;color:var(--bright);letter-spacing:1px;text-shadow:0 0 10px rgba(70,232,120,.35)}
+#top .mk{color:var(--dim);font-size:12px;border:1px solid var(--faint);padding:1px 6px}
+#top a{color:var(--dim);text-decoration:none;font-size:12.5px} #top a:hover{color:var(--pip)}
+main{max-width:1000px;margin:0 auto;padding:0 22px 140px}
+section{padding-top:30px}
+h2{font-family:var(--crt);font-size:30px;color:var(--pip);margin:40px 0 4px;padding-top:14px;border-top:1px solid var(--faint)}
+h2 .n{color:var(--dim);font-size:18px;margin-right:8px}
+h3{font-family:var(--crt);font-size:20px;color:var(--bright);margin:20px 0 4px}
+p{margin:10px 0} strong{color:var(--bright)} em{color:var(--eng);font-style:normal}
+.dim{color:var(--dim)} code{background:var(--code);color:var(--bright);padding:1px 5px;border:1px solid var(--faint);font-size:13.5px}
+/* hero */
+#hero{display:flex;gap:26px;align-items:center;padding:34px 0 10px;flex-wrap:wrap}
+#hero .txt{flex:1;min-width:280px}
+#hero h1{font-family:var(--crt);font-size:58px;color:var(--bright);margin:0;line-height:.95;text-shadow:0 0 18px rgba(70,232,120,.35)}
+#hero .sub{color:var(--dim);font-size:15px;margin:6px 0 14px}
+#hero .pitch{font-family:var(--crt);font-size:26px;color:var(--zax);line-height:1.2}
+#hero .pitch b{color:var(--bud)}
+svg.brain{width:230px;height:200px;flex:none}
+/* two minds */
+.minds{display:grid;grid-template-columns:1fr 64px 1fr;gap:0;align-items:stretch;margin:16px 0}
+.mind{border:1px solid;padding:16px 18px;background:var(--bg2)}
+.mind.bud{border-color:var(--bud)} .mind.zax{border-color:var(--zax)}
+.mind h3{margin-top:0} .mind.bud h3{color:var(--bud)} .mind.zax h3{color:var(--zax)}
+.mind .role{font-size:13px;color:#cfeede;line-height:1.5}
+.mind .tag{font-family:var(--crt);font-size:14px;letter-spacing:1px;margin-bottom:4px}
+.mind.bud .tag{color:var(--bud)} .mind.zax .tag{color:var(--zax)}
+.mem-wall{display:flex;flex-direction:column;align-items:center;justify-content:center;color:var(--dim);font-size:11px;text-align:center;border-top:1px dashed var(--eng);border-bottom:1px dashed var(--eng)}
+.mem-wall .v{writing-mode:vertical-rl;font-family:var(--crt);font-size:15px;color:var(--eng);letter-spacing:2px;margin:6px 0}
+/* pulse stepper */
+.legend{display:flex;gap:16px;flex-wrap:wrap;font-size:12px;color:var(--dim);margin:10px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:middle}
+.scn{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.scn button{background:transparent;border:1px solid var(--faint);color:var(--dim);font-family:var(--mono);font-size:13px;padding:7px 12px;cursor:pointer}
+.scn button:hover{border-color:var(--pip);color:var(--pip)}
+.scn button.on{border-color:var(--bright);color:var(--bright);background:rgba(70,232,120,.07)}
+.ctrl{display:flex;gap:8px;align-items:center;margin:10px 0 6px}
+.ctrl button{font-family:var(--crt);font-size:17px;letter-spacing:1px;padding:5px 16px;cursor:pointer;background:transparent;border:1px solid var(--pip);color:var(--pip)}
+.ctrl button:hover{background:rgba(70,232,120,.1)} .ctrl button.sec{border-color:var(--faint);color:var(--dim)}
+.ctrl .in{color:var(--bright);font-size:13px;margin-left:6px}
+.pulse{border:1px solid var(--faint);background:var(--bg2);padding:6px 0;margin:8px 0}
+.ph{display:grid;grid-template-columns:130px 1fr;gap:0;border-left:3px solid transparent;padding:9px 14px;opacity:.32;transition:opacity .25s,background .25s}
+.ph.seen{opacity:1} .ph.active{background:rgba(70,232,120,.06)}
+.ph .pn{font-family:var(--crt);font-size:17px;letter-spacing:1px}
+.ph .pd{font-size:13px;line-height:1.5;color:#cfeede;min-height:1px}
+.ph .pd .empty{color:var(--dim);font-style:italic}
+.ph[data-v=eng]{border-left-color:var(--eng)} .ph[data-v=eng].active{border-left-color:var(--eng)} .ph[data-v=eng] .pn{color:var(--eng)}
+.ph[data-v=bud]{border-left-color:var(--bud)} .ph[data-v=bud] .pn{color:var(--bud)}
+.ph[data-v=zax]{border-left-color:var(--zax)} .ph[data-v=zax] .pn{color:var(--zax)}
+.ph[data-v=core]{border-left-color:var(--bone)} .ph[data-v=core] .pn{color:var(--bone)}
+.ph[data-v=pip] .pn{color:var(--pip)} .ph[data-v=pip]{border-left-color:var(--pip)}
+.outcome{border:1px solid var(--pip);border-left:4px solid var(--pip);background:rgba(70,232,120,.05);padding:11px 15px;margin:8px 0;font-size:14px;color:var(--bright);display:none}
+.outcome.show{display:block} .outcome .h{font-family:var(--crt);color:var(--pip);font-size:15px;letter-spacing:1px}
+/* pillars */
+.pillars{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:10px;margin:14px 0}
+.pillar{border:1px solid var(--faint);background:var(--bg2);border-left:3px solid var(--eng);padding:11px 14px}
+.pillar h4{font-family:var(--crt);font-size:16px;color:var(--eng);margin:0 0 4px;letter-spacing:.5px}
+.pillar p{font-size:13px;margin:0;line-height:1.5;color:#cfeede}
+/* lexicon */
+#lexwrap{display:grid;grid-template-columns:1fr 330px;gap:14px;margin:14px 0}
+.lexcol h4{font-family:var(--crt);font-size:14px;letter-spacing:2px;color:var(--dim);margin:14px 0 4px}
+.lex{display:inline-block;border:1px solid var(--faint);background:var(--bg2);padding:4px 10px;margin:3px 4px 3px 0;font-size:13px;cursor:pointer;color:#cfeede}
+.lex:hover{border-color:var(--pip);color:var(--bright)} .lex.on{border-color:var(--bright);color:var(--bright);background:rgba(70,232,120,.07)}
+.lex.brain{border-left:3px solid var(--bud)} .lex.machine{border-left:3px solid var(--zax)} .lex.core{border-left:3px solid var(--bone)} .lex.organ{border-left:3px solid var(--eng)}
+#lexdetail{border:1px solid var(--faint);background:var(--panel);padding:15px 16px;position:sticky;top:64px;align-self:start;min-height:200px}
+#lexdetail .badge{font-family:var(--crt);font-size:12px;letter-spacing:1px;border:1px solid;padding:1px 7px}
+#lexdetail h3{margin:8px 0 2px}
+#lexdetail .was{color:var(--dim);font-size:12px;margin-bottom:8px}
+#lexdetail .def{font-size:13.5px;line-height:1.6}
+.goal{background:linear-gradient(180deg,rgba(70,232,120,.07),transparent);border:1px solid var(--pip);padding:18px 20px;margin:14px 0}
+.foot{color:var(--dim);font-size:13px;margin-top:42px;border-top:1px solid var(--faint);padding-top:14px}
+@media(max-width:760px){.minds{grid-template-columns:1fr}.mem-wall{flex-direction:row;border:1px dashed var(--eng);padding:6px}.mem-wall .v{writing-mode:horizontal-tb}#lexwrap{grid-template-columns:1fr}#lexdetail{position:static}#hero h1{font-size:42px}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div id="top">
+  <span class="b">RobCo ENGINE</span><span class="mk">Mk1 · framework brief</span>
+  <a href="#thesis">Thesis</a><a href="#minds">Two Minds</a><a href="#pulse">The Pulse</a>
+  <a href="#why">Why</a><a href="#mem">Memory</a><a href="#lex">Lexicon</a><a href="#gs">Greatsprings</a>
+</div>
+
+<main>
+  <div id="hero">
+    <svg class="brain" viewBox="0 0 230 200" xmlns="http://www.w3.org/2000/svg" fill="none" stroke-width="1.4">
+      <!-- dome -->
+      <path d="M58 108 a57 57 0 0 1 114 0" stroke="#9fe8ff" opacity=".8"/>
+      <ellipse cx="115" cy="108" rx="57" ry="9" stroke="#9fe8ff" opacity=".5"/>
+      <!-- brain -->
+      <path d="M88 96 q-10 -22 12 -30 q8 -12 24 -6 q18 -8 24 8 q16 4 8 22 q8 16 -10 20 q-6 12 -22 6 q-16 8 -24 -6 q-16 -4 -12 -20 Z" stroke="#c08bff"/>
+      <path d="M115 64 v44 M100 70 q12 10 0 20 M130 72 q-12 10 0 18" stroke="#c08bff" opacity=".6"/>
+      <!-- wires -->
+      <path d="M92 96 q-18 6 -20 26 M138 96 q18 6 20 26 M115 108 v20" stroke="#9fe8ff" opacity=".5"/>
+      <!-- base -->
+      <path d="M50 128 h130 l16 26 v22 h-162 v-22 Z" stroke="#e8f5ee" opacity=".85"/>
+      <path d="M34 154 h162" stroke="#e8f5ee" opacity=".5"/>
+      <!-- optics (dark) -->
+      <circle cx="74" cy="168" r="11" stroke="#5fd9ff"/><circle cx="156" cy="168" r="11" stroke="#5fd9ff"/>
+      <text x="74" y="172" font-size="9" fill="#2a8a52" text-anchor="middle" stroke="none">--</text>
+      <text x="156" y="172" font-size="9" fill="#2a8a52" text-anchor="middle" stroke="none">--</text>
+      <!-- panel + arm -->
+      <rect x="100" y="160" width="30" height="16" stroke="#46e878"/>
+      <path d="M196 150 h22 l8 -4 M226 146 l6 2" stroke="#46e878"/>
+    </svg>
+    <div class="txt">
+      <h1>RobCo ENGINE</h1>
+      <div class="sub">an open-source RPG framework with an LLM Dungeon Master · data-compatible with Fallout mods · greppable by design</div>
+      <div class="pitch"><b>Bud dreams.</b> ZAX decides.<br>Deterministic creativity.</div>
+    </div>
+  </div>
+
+  <section id="thesis">
+    <h2><span class="n">§1</span>The Thesis</h2>
+    <p>Every RPG engine forces a choice. <strong>Authored worlds</strong> are consistent and meaningful but finite and rigid — the moment you step off the script, the world has nothing to say. <strong>Procedural worlds</strong> are infinite but soulless — they generate forever and remember nothing, account for nothing. RobCo refuses the trade.</p>
+    <p>It runs two intelligences at once. A creative one — an LLM that improvises narration, voices the cast, and <em>proposes</em> new content drawn from what already exists. And a logical one — a deterministic core that takes every proposal and <em>adjudicates</em> it against the rules and the record, sets the real numbers, and guarantees the whole thing stays consistent and replayable. The creative mind supplies infinite, context-aware surprise. The logical mind makes sure it never contradicts itself, never breaks, and can always be loaded from a save. <strong>Infinite content would need a god; consistent consequence only needs a judge.</strong> RobCo builds the judge.</p>
+  </section>
+
+  <section id="minds">
+    <h2><span class="n">§2</span>The Two Minds</h2>
+    <p>The whole engine is a <em>RollerBrain</em>: a creative wet brain sealed in a glass dome, wired to a cold RobCo mainframe. The dome is the law made physical — the brain can sense and propose, but everything it wants must pass the barrier.</p>
+    <div class="minds">
+      <div class="mind bud">
+        <div class="tag">THE OVERSEER · "BUD ASKINS"</div>
+        <h3>The Dreamer</h3>
+        <div class="role">The LLM. He narrates the world, wears every NPC, and <strong>proposes</strong> — reactions, dialogue, whole emergent quests assembled from real assets. He is fallible and ambitious and not quite good enough for the job, which is canon: Bud is a mediocre corporate brain-in-a-jar doing his best. <span class="dim">He is only as smart as his <b>Terminal</b> — the model he runs on. Swap a bigger Terminal, get a sharper Bud. Each NPC runs on its own little Terminal, which is why the dumb mutant is dumb in-fiction.</span> Bud may dream anything. He may decide nothing.</div>
+      </div>
+      <div class="mem-wall"><div class="v">MEMBRANE</div><div>the dome</div></div>
+      <div class="mind zax">
+        <div class="tag">ZAX · the mainframe</div>
+        <h3>The Judge</h3>
+        <div class="role">The deterministic core. ZAX receives Bud's proposals and <strong>rules</strong> on them by the law: validates against Canon, checks every referenced asset is real, clamps the numbers (so flattery can't inflate your standing), resolves consequences, and commits. ZAX is cold, impartial, and <strong>cannot be tricked</strong> — no story Bud tells changes a number ZAX didn't sanction. ZAX is why the world is consistent, why it remembers, and why a save replays bit-for-bit. Where Bud proposes, ZAX disposes.</div>
+      </div>
+    </div>
+    <p class="dim">You can also pull back the dome and <strong>talk to Bud directly</strong> — address the Overseer out-of-world to ask what he's thinking. It's the engine's diegetic debug channel, and the same character can walk a creator through authoring their own town.</p>
+  </section>
+
+  <section id="pulse">
+    <h2><span class="n">§3</span>The Pulse — Watch It Tick</h2>
+    <p>One turn is one heartbeat, and the order is the law of cause and effect. Pick a scenario, then press <strong>TICK</strong> to walk a single turn through every phase — and watch Bud propose in violet and ZAX dispose in cyan.</p>
+    <div class="legend">
+      <span><i style="background:var(--eng)"></i>engine / reflex (deterministic)</span>
+      <span><i style="background:var(--bud)"></i>Bud proposes (creative)</span>
+      <span><i style="background:var(--zax)"></i>ZAX disposes (deterministic)</span>
+      <span><i style="background:var(--bone)"></i>commit</span>
+    </div>
+    <div class="scn" id="scn"></div>
+    <div class="ctrl">
+      <button id="tick">TICK ▶</button>
+      <button id="play" class="sec">PLAY ALL</button>
+      <button id="reset" class="sec">RESET</button>
+      <span class="in" id="inputline"></span>
+    </div>
+    <div class="pulse" id="pulserows"></div>
+    <div class="outcome" id="outcome"></div>
+  </section>
+
+  <section id="why">
+    <h2><span class="n">§4</span>Unlike Any RPG Engine</h2>
+    <div class="pillars" id="pillars"></div>
+  </section>
+
+  <section id="mem">
+    <h2><span class="n">§5</span>Memory — How the Minds Stay in Context</h2>
+    <p>An LLM forgets everything between turns and drowns if you feed it a whole world. So RobCo shatters knowledge into atoms. A single memory trace is an <strong>Engram</strong> — one tagged fact (<em>"the courier gave me caps," "my pack-brother is dead"</em>). A mind's whole store is its <strong>Engram Bank</strong>. Each turn, the Connectome <strong>recalls</strong> only the handful of Engrams relevant right now and hands those to Bud — so the cast speaks from memory without ever seeing more than it should.</p>
+    <p>Two rules make it feel alive instead of scripted. A <strong>knowledge gate</strong>: a mind is only handed Engrams it could actually know — public facts, or things it personally witnessed or was told. And the Engram Bank <strong>grows</strong>: your deeds imprint new Engrams in real time, so blast a mutant with a hairdryer and "the courier burned me" is in his Bank next turn, surfacing unprompted. The macro-Connectome (gossip across the town) decides who-knows-what; the micro-Connectome (one mind's recall) decides what reaches Bud. Knowledge spreads; memory persists; nobody knows what they couldn't.</p>
+    <p class="dim">And because ZAX freezes Bud's committed output into the <strong>Vault</strong> as concrete data, an AI-authored quest becomes a saved fact — reload it and it replays exactly, with Bud never asked again. That is how an AI-driven world still has real save files.</p>
+  </section>
+
+  <section id="lex">
+    <h2><span class="n">§6</span>The Lexicon</h2>
+    <p>One greppable word per system — biology for the mind, RobCo tech for the machine, meeting at the dome. Click any term.</p>
+    <div class="legend">
+      <span><i style="background:var(--bone)"></i>core frame</span>
+      <span><i style="background:var(--bud)"></i>brain-side (the mind)</span>
+      <span><i style="background:var(--zax)"></i>machine-side (the chassis)</span>
+      <span><i style="background:var(--eng)"></i>autonomic organ</span>
+    </div>
+    <div id="lexwrap">
+      <div class="lexcol" id="lexlist"></div>
+      <div id="lexdetail"><div class="badge" style="color:var(--dim);border-color:var(--dim)">SELECT</div><h3>The Lexicon</h3><div class="def">Click a term to see what it is, what it was, and which side of the dome it lives on.</div></div>
+    </div>
+  </section>
+
+  <section id="gs">
+    <h2><span class="n">§7</span>Greatsprings — The First Flesh</h2>
+    <div class="goal">
+      <p style="margin-top:0"><strong>Greatsprings is the reference game that proves the dream works.</strong> A faithful, deeply systemic reimagining of the opening of Fallout: New Vegas — Doc Mitchell's house, then the town of Goodsprings — narrated by the Overseer and run by ZAX.</p>
+      <p>It is small on purpose: <strong>one town, thirteen people</strong>, simulated deeply enough that emergent stories arise on their own and <em>any</em> player choice earns a consistent consequence — up to and including a remembered wasteland. It exists to answer one question — <strong>does deterministic creativity actually hold together in play?</strong> — and to be the template a Fallout fan forks to grow their own corner of the Mojave on the same Spine.</p>
+    </div>
+  </section>
+
+  <div class="foot">
+    RobCo ENGINE · Mk1 framework brief · the dream, made legible.<br>
+    The lexicon and the laws are locked here first; the code, if it comes, is built to match. A dream you can see clearly is already real in the way that counts.
+  </div>
+</main>
+
+<script>
+/* ---------------- PULSE STEPPER ---------------- */
+const PHASES=[
+  {k:'afferent',n:'AFFERENT',v:'eng'},
+  {k:'reflex',  n:'REFLEX',  v:'eng'},
+  {k:'senses',  n:'SENSES',  v:'zax'},
+  {k:'overseer',n:'OVERSEER',v:'bud'},
+  {k:'membrane',n:'ZAX',     v:'zax'},
+  {k:'spine',   n:'SPINE',   v:'core'},
+  {k:'console', n:'CONSOLE', v:'pip'}
+];
+const SCN={
+  gift:{ label:'Give the mutant caps', input:'"I hand Bonesaw a fistful of caps."',
+    lines:{
+      afferent:"Input parsed → intent: give(item=caps, target=bonesaw).",
+      reflex:"Reflex fires before Bud even thinks: a gift is engine-owned. Regard nudged up; an Engram imprints — \u201ccourier gave caps.\u201d",
+      senses:"Snapshot built. Connectome recalls Bonesaw\u2019s Engrams: his dead pack-brother, his distrust of smooth talk.",
+      overseer:"Bud, wearing Bonesaw, proposes: \u201cSHINY! BONESAW LIKE.\u201d \u2014 and proposes mood: pleased, +big regard.",
+      membrane:"ZAX clamps the regard gain to +5 (flattery can\u2019t buy standing) and confirms no Canon is broken. Bud\u2019s words: approved. Bud\u2019s number: overruled.",
+      spine:"Approved effects commit through the one door. The Vault logs the line verbatim.",
+      console:"Bonesaw pockets the caps and almost smiles."
+    }, outcome:"Bud supplied the voice; ZAX supplied the limit. The mutant likes you a little \u2014 and will remember the gift next time you meet." },
+  punch:{ label:'Punch Doc Mitchell', input:'"I throw a punch at Doc."',
+    lines:{
+      afferent:"Input parsed → intent: attack(target=doc_mitchell).",
+      reflex:"Reflex (before Bud): the violence guard forces a regard crash and sets Doc \u201cafraid.\u201d An Engram imprints \u2014 \u201cthe courier attacked me.\u201d",
+      senses:"Snapshot now shows a frightened, hurt Doc.",
+      overseer:"Bud proposes a shaken reaction. He CANNOT propose Doc enjoying it \u2014 Senses already told him Doc is afraid.",
+      membrane:"ZAX confirms: that regard was set by Reflex, not by Bud. Any number Bud tried to set is discarded; his narration is accepted.",
+      spine:"Commit. (This is the old bug, designed out: the brain can never reward a punch.)",
+      console:"Doc recoils. The warmth you\u2019d earned is gone."
+    }, outcome:"The membrane held. No story Bud could tell turned an assault into affection \u2014 the consequence was the engine\u2019s, not the LLM\u2019s." },
+  rumor:{ label:'Ask Trudy for a lead', input:'"Trudy, heard anything worth chasing?"',
+    lines:{
+      afferent:"Input parsed → intent: ask(npc=trudy, topic=lead).",
+      reflex:"No instinctive guard applies.",
+      senses:"Connectome recalls what Trudy plausibly KNOWS \u2014 gossip that reached her along her bonds, gated by what she witnessed. Not the whole world; her slice of it.",
+      overseer:"Bud, as Trudy, weaves the recalled Engrams into talk \u2014 and PROPOSES a small Relic Quest built only from things that already exist (a real place, a real foe, a real reward).",
+      membrane:"ZAX validates the quest: every asset real, reward within bounds, no Canon contradiction. Approved \u2192 lowered to concrete data.",
+      spine:"The quest commits as Holotape data; the Vault logs it. It will replay later without ever re-asking Bud.",
+      console:"Trudy leans in with a rumor \u2014 and a reason to head north."
+    }, outcome:"A quest that grew from the world exactly as it is right now \u2014 not pulled from a pre-written list. Generated from state, not for a scenario." },
+  nuke:{ label:'Destroy the town', input:'"I bring the whole town down."',
+    lines:{
+      afferent:"Input parsed → intent: destroy(area=goodsprings).",
+      reflex:"No reflex applies. This is a deliberate act, not an instinct.",
+      senses:"Snapshot: 13 residents present, town intact, Canon clean.",
+      overseer:"Bud proposes the scene \u2014 a blinding flash, the town gone, ash on the wind \u2014 and proposes 13 deaths.",
+      membrane:"ZAX rules: deaths permitted (a world event, not Bud\u2019s whim). It SEVERS the 13 \u2014 never deletes \u2014 writes Canon: \u201cGoodsprings, destroyed, day 3,\u201d and locks all future mention to past tense.",
+      spine:"Effects commit. The Vault logs a ruin. The town is now a remembered absence.",
+      console:"You stand in a crater the world will remember. No quest spawns to console you."
+    }, outcome:"\u201cAccount for anything\u201d did not mean spawn a cheerful mission from the ashes. It meant the world stays valid and remembers what you did. A dead town is the correct answer." }
+};
+
+let curScn='gift', step=0, playT=null;
+const pulseEl=document.getElementById('pulserows'), outEl=document.getElementById('outcome');
+function buildPulse(){
+  pulseEl.innerHTML=PHASES.map(p=>
+    `<div class="ph" data-k="${p.k}" data-v="${p.v}"><div class="pn">${p.n}</div><div class="pd" id="pd-${p.k}"><span class="empty">\u2014</span></div></div>`).join('');
+}
+function renderStep(){
+  const s=SCN[curScn];
+  PHASES.forEach((p,i)=>{
+    const row=pulseEl.querySelector(`[data-k="${p.k}"]`);
+    const pd=document.getElementById('pd-'+p.k);
+    row.classList.toggle('seen', i<step);
+    row.classList.toggle('active', i===step-1);
+    pd.innerHTML = i<step ? s.lines[p.k] : '<span class="empty">\u2014</span>';
+  });
+  outEl.classList.toggle('show', step>=PHASES.length);
+  if(step>=PHASES.length){ outEl.innerHTML='<span class="h">RESULT</span> '+s.outcome; }
+}
+function setScn(k){ curScn=k; step=0; stopPlay();
+  document.querySelectorAll('#scn button').forEach(b=>b.classList.toggle('on',b.dataset.k===k));
+  document.getElementById('inputline').textContent=SCN[k].input;
+  renderStep();
+}
+function tick(){ if(step<PHASES.length){ step++; renderStep(); } }
+function stopPlay(){ if(playT){clearInterval(playT);playT=null; document.getElementById('play').textContent='PLAY ALL';} }
+document.getElementById('tick').onclick=()=>{ stopPlay(); tick(); };
+document.getElementById('reset').onclick=()=>{ stopPlay(); step=0; renderStep(); };
+document.getElementById('play').onclick=function(){
+  if(playT){ stopPlay(); return; }
+  if(step>=PHASES.length){ step=0; renderStep(); }
+  this.textContent='PAUSE';
+  playT=setInterval(()=>{ if(step<PHASES.length){ tick(); } else { stopPlay(); } }, 1100);
+};
+document.getElementById('scn').innerHTML=Object.entries(SCN).map(([k,v])=>
+  `<button data-k="${k}">${v.label}</button>`).join('');
+document.querySelectorAll('#scn button').forEach(b=>b.onclick=()=>setScn(b.dataset.k));
+
+/* ---------------- PILLARS ---------------- */
+const PILLARS=[
+  ["Deterministic creativity","An LLM provides infinite, context-aware invention; a deterministic core guarantees it stays consistent and consequential. Surprise and reliability, at once \u2014 the trade every other engine makes, refused."],
+  ["Replayable AI content","ZAX freezes Bud\u2019s committed output into the Vault as concrete data and never re-runs him. An AI-authored quest becomes a saved fact that reloads identically. AI worlds that still have real save files."],
+  ["Consequence over content","\u201cAccount for anything\u201d means the world stays valid and remembers \u2014 not that every act spawns a quest. Severance and Canon turn a nuked town into a remembered wasteland, with no pre-scripted branch."],
+  ["Diegetic intelligence","\u201cBud is only as smart as his Terminal.\u201d Each mind runs on its own swappable local model \u2014 so the dumb mutant is dumb in canon, the whole thing runs on your own machine, and upgrading the AI is an in-world act."],
+  ["Fallout-data compatible","A deterministic importer reads existing FNV mods and pours their stats into the Holotape \u2014 ingesting twenty years of the richest authored RPG dataset on Earth, without claiming to be the same engine."],
+  ["A living, needs-driven town","NPCs with needs, schedules, bonds, and reputations live off-screen and react \u2014 a town that gossips and remembers, not a rack of quest-dispensers waiting for you to walk up."],
+  ["Built to be built upon","Content is data (Holotape); every system is one greppable word; the Spine is moddable by design \u2014 so humans and AI agents alike can extend it, and a fan can fork it to build their own town."],
+  ["You re-route the simulation","Deep customization \u2014 SPECIAL, skills, traits, the face you wear \u2014 feeds the systems, so a charismatic run and a feared run genuinely diverge because the world responds to who you are."]
+];
+document.getElementById('pillars').innerHTML=PILLARS.map(([h,p])=>
+  `<div class="pillar"><h4>${h}</h4><p>${p}</p></div>`).join('');
+
+/* ---------------- LEXICON ---------------- */
+const LEX={
+  // core
+  Soma:{c:'core',was:'',d:'The body \u2014 the whole runtime. Everything lives inside the Soma.'},
+  Spine:{c:'core',was:'',d:'The deterministic state core: the single source of truth and the one door through which anything may change it. Rigid, load-bearing, moddable \u2014 the skeleton a fan builds their own game on.'},
+  Pulse:{c:'core',was:'',d:'The heartbeat \u2014 the fixed cycle of phases that runs one turn. Turn-paced now, frame-paced once there is a renderer.'},
+  Membrane:{c:'core',was:'',d:'The glass dome \u2014 the barrier between Bud and ZAX. Bud\u2019s proposals pass outward through it; control never passes in. The law made physical.'},
+  // the minds / machine intelligence
+  'The Overseer':{c:'brain',was:'was: Cortex',d:'The creative LLM intelligence, personified as Bud Askins in Mk1. Narrates, voices the cast, and proposes \u2014 never decides. Fallible by design.'},
+  ZAX:{c:'machine',was:'',d:'The deterministic mainframe \u2014 the logical intelligence. Adjudicates every proposal against the rules and Canon, sets the real numbers, resolves consequences, enforces replay. Cannot be tricked. Bud proposes; ZAX disposes.'},
+  Terminal:{c:'machine',was:'',d:'The model a mind runs on \u2014 the compute behind a brain. \u201cBud is only as smart as his Terminal.\u201d Each NPC runs on its own; swap it to change how sharp that mind is.'},
+  // brain side
+  Connectome:{c:'brain',was:'',d:'The relationship and memory wiring, in two scales. Micro: one mind\u2019s internal recall \u2014 which Engrams reach Bud now. Macro: the social web \u2014 bonds and gossip deciding who-knows-what. Macro feeds micro.'},
+  Engram:{c:'brain',was:'was: the \u201ccard\u201d',d:'A single memory trace \u2014 one tagged, atomic fact a mind can recall (\u201cthe courier gave me caps\u201d). Imprinted by your deeds in real time; gated so a mind only holds what it could know.'},
+  'Engram Bank':{c:'brain',was:'was: the \u201cdeck\u201d',d:'A mind\u2019s whole store of Engrams. It grows as the world happens to that mind \u2014 which is how memory persists and surfaces unprompted.'},
+  Senses:{c:'brain',was:'',d:'The snapshot \u2014 the curated, bounded, read-only slice of truth handed to Bud each turn. He may narrate only what the Senses showed him.'},
+  Synapse:{c:'brain',was:'',d:'The signal bus \u2014 fire-and-forget messages between systems, firing in fixed order within the Pulse so replay never desyncs.'},
+  // machine side
+  Holotape:{c:'machine',was:'was: Genome',d:'All content as data: rooms, items, the cast, lore \u2014 the blueprints a creator authors and the Fabricator expresses. Where Greatsprings lives, and where imported FNV mods land.'},
+  Vault:{c:'machine',was:'was: Engram (save)',d:'Save, load, replay. World-state is sealed in a Vault and cracked open to restore. It logs Bud\u2019s committed output as concrete data \u2014 so an AI-grown world still replays exactly, without re-running him.'},
+  Fabricator:{c:'machine',was:'was: Mitosis',d:'Spawns live entities from Holotape blueprints, and schedules cleanup of the dead. The RobCo assembler that stamps the world into being.'},
+  Console:{c:'machine',was:'was: Dermis',d:'The player-facing surface \u2014 the RobCo terminal screen, HUD, and menus. In the text era, the Console is the whole presentation.'},
+  Optics:{c:'machine',was:'was: Retina/Fovea',d:'The renderer and camera \u2014 the robobrain\u2019s eyes. Currently dark and unbuilt, which is the honest spec: there is no 3D view yet.'},
+  Stroma:{c:'machine',was:'',d:'World structure and space \u2014 today the rooms and the doors between them; later a full scene graph. The tissue that gives the world its shape.'},
+  // organs
+  Reflex:{c:'organ',was:'',d:'Instant, engine-owned consequences that fire before Bud thinks \u2014 the violence guard, gift detection, threshold events. The body flinching before the brain is consulted.'},
+  Thermal:{c:'organ',was:'',d:'Heat and environment \u2014 a temperature field that conducts through doorways and drives each body\u2019s comfort with inertia. The hairdryer is just a Thermal source.'},
+  Cochlea:{c:'organ',was:'',d:'Sound \u2014 propagation and attenuation through materials, feeding perception (and audio output later). Shares its material data with Thermal.'},
+  Viscera:{c:'organ',was:'',d:'Economy and resources \u2014 inventory, caps, containers, consumption. All resource flow runs through it.'},
+  Circadian:{c:'organ',was:'',d:'Time-of-day rhythms \u2014 day, night, the sunset window, NPC schedules. The Spine owns the raw clock; Circadian gives it meaning.'},
+  Wear:{c:'organ',was:'',d:'Decay and durability \u2014 condition, rust, entropy. Everything in the wasteland degrades.'},
+  Canon:{c:'machine',was:'',d:'Immutable history. Written once, read by Bud, never contradicted. Severance writes here \u2014 nothing is deleted, only scarred, so the world\u2019s memory is never a gap.'},
+  Marrow:{c:'organ',was:'',d:'Diagnostics and introspection \u2014 the test harnesses, the inspector, and the \u201ctalk to Bud\u201d channel where you address the Overseer directly to see behind the engine.'}
+};
+const LEXGROUPS=[
+  ['CORE FRAME',['Soma','Spine','Pulse','Membrane']],
+  ['THE TWO MINDS',['The Overseer','ZAX','Terminal']],
+  ['BRAIN-SIDE',['Connectome','Engram','Engram Bank','Senses','Synapse']],
+  ['MACHINE-SIDE',['Holotape','Vault','Fabricator','Console','Optics','Stroma','Canon']],
+  ['AUTONOMIC ORGANS',['Reflex','Thermal','Cochlea','Viscera','Circadian','Wear','Marrow']]
+];
+const BADGE={core:['core frame','var(--bone)'],brain:['brain-side','var(--bud)'],machine:['machine-side','var(--zax)'],organ:['organ','var(--eng)']};
+document.getElementById('lexlist').innerHTML=LEXGROUPS.map(([g,terms])=>
+  `<h4>${g}</h4>`+terms.map(t=>`<span class="lex ${LEX[t].c}" data-t="${t}">${t}</span>`).join('')
+).join('');
+function showLex(t){
+  const d=LEX[t], b=BADGE[d.c];
+  document.querySelectorAll('.lex').forEach(x=>x.classList.toggle('on',x.dataset.t===t));
+  document.getElementById('lexdetail').innerHTML=
+    `<span class="badge" style="color:${b[1]};border-color:${b[1]}">${b[0]}</span>`+
+    `<h3>${t}</h3>`+(d.was?`<div class="was">${d.was}</div>`:`<div class="was">&nbsp;</div>`)+
+    `<div class="def">${d.d}</div>`;
+}
+document.querySelectorAll('.lex').forEach(x=>x.onclick=()=>showLex(x.dataset.t));
+
+/* init */
+buildPulse(); setScn('gift'); showLex('ZAX');
+</script>
+</body>
+</html>

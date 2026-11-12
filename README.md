@@ -4,17 +4,39 @@
 
 ## The RPG I wanted to play
 
-What happens to a delivery quest if the player destroys Goodsprings before accepting it?
-The town should disappear as a destination. A surviving courier might know where the refugees went.
-A stranger across the map should learn about it through someone who witnessed it.
+**What should happen the morning after Goodsprings disappears?**
 
-My ambition for Semantic Engine was an original C++ RPG engine supporting choices beyond scripted branches.
-AI would propose consequences and dialogue. The engine would check each proposal against persistent world facts.
-Modders could author people, places, and motives without scripting every possible meeting.
+> The ai dungeon master ties up any loose ends, and decides how friends of the NPCs that no longer exist in NV take it - what do they say to the player to show they recognise Goodsprings destruction? Does a NPC randomly make a journey to the shellhole left there, and leave a flower o the ground in remembrance? this is what Semantic Engine can let happen - those little stories that stack into a most unique and beautiful playthrough
+
+— 2Shay
+
+The ambition was an original C++ RPG engine for choices beyond scripted branches.
+A local or online AI dungeon master would reason about quests, relationships, and unresolved consequences.
+Persistent world facts would keep those stories consistent. A stranger needs some way to learn what happened.
 
 RobCo Framework explored that idea using Fallout: New Vegas as a test case.
 Greatsprings preserves a C# runtime, a Godot frontend, JavaScript experiments, and a Python record extractor.
 The surviving importer reads game records into JSON. A C++ backend remains a design goal.
+
+## Start here · play a Relic quest
+
+Relic quests are the central idea: a lasting reward tied to something particular to your playthrough.
+Run the recovered Sunny Smiles encounter with Node.js 18 or later:
+
+```sh
+node prototypes/relics/greatsprings-relics.js
+```
+
+Sunny visits Doc’s clinic on a calm morning. She can plausibly offer the player a shooting lesson.
+The demo judges six proposals against the giver, reachable locations, reward limits, and quest availability.
+It flags Doc’s kitchen chore for reassignment and rejects the caravan beyond the playable area.
+Completing Sunny’s lesson grants *Steady Hand*, raises Guns from 18 to 23, and starts a seven-day cooldown.
+
+The recovered module generates scripted proposals. A new compatibility file supplies its missing registry and events.
+The intended AI dungeon master could run locally or online and reason through alternative quests.
+This demo exercises the engine’s checks without connecting to a model.
+
+Browse the [prototype and design collection](docs/collection.md) for the other surviving experiments.
 
 ## What survived
 
@@ -60,15 +82,7 @@ This produces an intermediate export. The conversion from that export to the dem
 
 ## Semantic Viewer
 
-I wanted NPCs to notice the weapon someone actually carried, including unfamiliar Fallout 4 modded weapons.
-The viewer would inspect a 3D model from several angles and record visible traits.
-An NPC could then describe a gold finish or Gothic ornament without knowing the mod’s name.
-
-Design example: a collector might gain five coolness points for carrying several gilded weapons.
-Matching Gothic clothing could earn twenty suave points. Clashing clothes might incur a small penalty.
-Those numbers illustrate possible game rules. The recovered runtime does not implement those scores.
-
-A July backup preserves a VLM importer demo image and notes on appearance reactions.
-Standalone viewer source remains unlocated. Open-ended AI consequences also remain an ambition.
+Grizzly7 was the test for describing a modded item from its appearance.
+The [viewer recovery note](docs/semantic-viewer.md) explains the seven views, proposed tags, and NPC reactions.
 
 The original [runtime architecture](docs/robco-runtime-architecture-v0.1.md) records the contemporary design.

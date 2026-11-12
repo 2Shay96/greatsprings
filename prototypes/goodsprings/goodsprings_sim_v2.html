@@ -1,0 +1,366 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:13px;color:var(--color-text-primary);padding:12px}
+.grid2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-bottom:10px}
+.full{grid-column:1/-1}
+.card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:10px 12px}
+.slabel{font-size:10px;font-weight:500;color:var(--color-text-secondary);letter-spacing:.05em;text-transform:uppercase;margin-bottom:7px}
+.npc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:6px}
+.nc{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:7px 9px;cursor:pointer}
+.nc:hover{border-color:var(--color-border-primary)}
+.nc.sel{border-color:#185FA5;border-width:1.5px}
+.nc .nm{font-size:11px;font-weight:500;margin-bottom:1px}
+.nc .rl{font-size:9px;color:var(--color-text-secondary);margin-bottom:4px}
+.nc .rg{font-size:10px;font-weight:500}
+.hpt{height:3px;border-radius:2px;background:var(--color-border-tertiary);margin-top:4px;overflow:hidden}
+.hpf{height:100%;border-radius:2px}
+.abtn{display:block;width:100%;background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:7px 10px;cursor:pointer;font-size:11px;font-family:var(--font-sans);color:var(--color-text-primary);text-align:left;margin-bottom:5px}
+.abtn:hover{background:var(--color-background-secondary)}
+.abtn.bad{border-color:#A32D2D;color:#791F1F}
+.abtn.good{border-color:#0F6E56;color:#085041}
+.abtn:disabled{opacity:.35;cursor:not-allowed}
+.rbar{display:flex;align-items:center;gap:7px;margin-bottom:5px}
+.rtrack{flex:1;height:5px;border-radius:3px;background:var(--color-border-tertiary);overflow:hidden}
+.rfill{height:100%;border-radius:3px;transition:width .25s}
+.rval{font-size:10px;font-weight:500;min-width:28px;text-align:right;font-family:var(--font-mono)}
+.rname{font-size:10px;color:var(--color-text-secondary);min-width:72px}
+.logbox{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);max-height:180px;overflow-y:auto}
+.le{font-size:10px;padding:4px 8px;border-bottom:0.5px solid var(--color-border-tertiary);line-height:1.5;font-family:var(--font-mono)}
+.le:last-child{border-bottom:none}
+.le.bad{color:#A32D2D}.le.good{color:#0F6E56}.le.sys{color:var(--color-text-secondary)}.le.warn{color:#854F0B}
+.chip{font-size:9px;font-family:var(--font-mono);background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:3px;padding:1px 4px;margin:1px;display:inline-block}
+.btag{font-size:9px;padding:2px 6px;border-radius:10px;margin:2px;display:inline-block;border:0.5px solid}
+.bok{background:color-mix(in srgb,#E1F5EE 50%,transparent);border-color:#0F6E56;color:#085041}
+.blost{background:color-mix(in srgb,#FCEBEB 50%,transparent);border-color:#A32D2D;color:#791F1F;text-decoration:line-through}
+.drow{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.drow:last-child{border-bottom:none}
+.dk{color:var(--color-text-secondary)}
+.thr{display:flex;align-items:center;gap:5px;font-size:10px;color:var(--color-text-secondary);margin-bottom:3px}
+.tdot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+</style>
+
+<div class="grid2 full" style="margin-bottom:10px">
+  <div class="card full" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px">
+    <div>
+      <div class="slabel" style="margin-bottom:2px">player standing · goodsprings</div>
+      <div style="display:flex;align-items:baseline;gap:10px">
+        <div id="grep" style="font-size:28px;font-weight:500;line-height:1">0</div>
+        <div>
+          <div id="glabel" style="font-size:11px;color:var(--color-text-secondary)">Neutral — full access</div>
+          <div id="gbens" style="margin-top:3px"></div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="thr"><div class="tdot" style="background:#0F6E56"></div>+40 → discounts + extra dialogue</div>
+      <div class="thr"><div class="tdot" style="background:#BA7517"></div>−20 → Chet removes discount</div>
+      <div class="thr"><div class="tdot" style="background:#E8A020"></div>−40 → NPCs withhold info</div>
+      <div class="thr"><div class="tdot" style="background:#A32D2D"></div>−80 → some NPCs hostile</div>
+    </div>
+    <button id="resetbtn" style="background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:5px 12px;cursor:pointer;font-size:11px;font-family:var(--font-sans);color:var(--color-text-secondary)">reset world</button>
+  </div>
+</div>
+
+<div class="card" style="margin-bottom:10px">
+  <div class="slabel">select npc</div>
+  <div class="npc-grid" id="npcgrid"></div>
+</div>
+
+<div class="grid2">
+  <div class="card">
+    <div class="slabel" id="aclabel">choose action</div>
+    <div id="azone"><div style="font-size:11px;color:var(--color-text-secondary)">Select an NPC first.</div></div>
+  </div>
+  <div class="card">
+    <div class="slabel" id="dlabel">npc detail</div>
+    <div id="dzone"><div style="font-size:11px;color:var(--color-text-secondary)">Select an NPC to inspect.</div></div>
+  </div>
+</div>
+
+<div class="card" style="margin-top:10px">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div class="slabel" style="margin-bottom:0">world event log</div>
+    <div id="ticklabel" style="font-size:10px;color:var(--color-text-secondary)">day 1 · 09:37 · tick 0</div>
+  </div>
+  <div class="logbox" id="logbox"><div class="le sys">— world quiet, no events yet —</div></div>
+</div>
+
+<div class="card" style="margin-top:10px">
+  <div class="slabel">regard overview — all npcs</div>
+  <div id="regbars"></div>
+</div>
+
+<script>
+const NPCS = {
+  trudy:   {name:"Trudy",       role:"saloon owner",      age:29, hpCur:90,  hpMax:100, sp:{S:4,P:8,E:5,C:8,I:7,A:4,L:5}, inf:90,  cou:70, stub:30,  regard:0,  essential:false, houseC:false, witnR:6,  repMult:1.5, bonds:{doc:72,pete:55,sunny:58,chet:50,sf2:30,sf3:28,sm1:22,sm2:18}, benefits:["gossip relay","quest advice","saloon access","rally bonus +15"], desc:"Social backbone. C:8 makes her the loudest relay — her regard colours every NPC's read of you."},
+  doc:     {name:"Doc Mitchell",role:"physician",           age:58, hpCur:72,  hpMax:85,  sp:{S:3,P:6,E:4,C:5,I:9,A:4,L:6}, inf:48,  cou:45, stub:40,  regard:0,  essential:true,  houseC:false, witnR:3,  repMult:1.2, bonds:{trudy:72,sf3:42,sm2:28,sunny:35}, benefits:["healing services","rad treatment","SPECIAL recheck","med supplies discount"], desc:"I:9 means he correlates events accurately. Essential until quest complete."},
+  sunny:   {name:"Sunny Smiles",role:"wilderness guide",   age:24, hpCur:96,  hpMax:100, sp:{S:5,P:8,E:6,C:5,I:5,A:7,L:6}, inf:55,  cou:65, stub:25,  regard:0,  essential:false, houseC:false, witnR:5,  repMult:1.0, bonds:{trudy:58,pete:35,doc:35}, benefits:["tutorial quests","gecko hunting guide","crafting tuition","Cheyenne early warnings"], desc:"P:8 + A:7 — earliest human detection node. She and Cheyenne form the environmental sensor pair."},
+  pete:    {name:"Easy Pete",   role:"prospector",          age:67, hpCur:61,  hpMax:75,  sp:{S:6,P:5,E:5,C:4,I:5,A:3,L:7}, inf:30,  cou:60, stub:85,  regard:0,  essential:false, houseC:false, witnR:2,  repMult:0.8, bonds:{sunny:35,trudy:55}, benefits:["dynamite (Explosives 25+)","prospecting tips","old-timer lore"], desc:"Stubbornness 85 — gossip rarely reaches him. If Trudy doesn't bring it directly, he doesn't hear it."},
+  chet:    {name:"Chet",        role:"store owner",         age:35, hpCur:65,  hpMax:70,  sp:{S:3,P:5,E:4,C:5,I:6,A:4,L:4}, inf:38,  cou:22, stub:50,  regard:0,  essential:false, houseC:false, witnR:3,  repMult:0.9, bonds:{trudy:50}, benefits:["general store access","10% discount (rep ≥ 0)","crafting components","ammo stock"], desc:"Courage 22 — lowest in Goodsprings. Removes discount early and independently of town rep threshold."},
+  ringo:   {name:"Ringo",       role:"Crimson Caravan",     age:28, hpCur:55,  hpMax:70,  sp:{S:4,P:6,E:4,C:4,I:5,A:6,L:3}, inf:18,  cou:35, stub:20,  regard:0,  essential:false, houseC:false, witnR:2,  repMult:0.7, bonds:{}, benefits:["Crimson Caravan intro","caravan route info","Ghost Town Gunfight quest"], desc:"L:3 — lowest luck in net. Low influence (18) dampens rep swings if you harm him."},
+  victor:  {name:"Victor",      role:"Securitron",           age:0,  hpCur:200, hpMax:200, sp:{S:9,P:7,E:10,C:6,I:7,A:5,L:5},inf:0,   cou:99, stub:0,   regard:0,  essential:true,  houseC:true,  witnR:8,  repMult:1.0, bonds:{}, benefits:["Mr House awareness","Mojave escort","quest trigger"], desc:"Essential. Bypasses gossip engine — logs directly to Mr House. I:7 = accurate reports."},
+  joe_cobb:{name:"Joe Cobb",    role:"Powder Ganger",        age:34, hpCur:80,  hpMax:80,  sp:{S:7,P:4,E:6,C:3,I:3,A:5,L:4}, inf:0,   cou:80, stub:60,  regard:-80, essential:false, houseC:true,  witnR:4,  repMult:0.6, bonds:{}, benefits:[], desc:"External threat node. Presence applies −10 to all GS NPC effective courage. I:3 = inaccurate PG reports."},
+  sf1:     {name:"Settler F1",  role:"field worker",          age:31, hpCur:58,  hpMax:60,  sp:{S:5,P:4,E:5,C:4,I:4,A:4,L:5}, inf:12,  cou:40, stub:35,  regard:0,  essential:false, houseC:false, witnR:2,  repMult:0.5, bonds:{sf2:62,sf3:62,chet:25}, benefits:["field location info","settler morale"], desc:"Needs Trudy rally to fight. Gossip delay: 2–3 ticks."},
+  sf2:     {name:"Settler F2",  role:"domestic",              age:26, hpCur:55,  hpMax:55,  sp:{S:3,P:5,E:4,C:5,I:4,A:5,L:5}, inf:14,  cou:35, stub:20,  regard:0,  essential:false, houseC:false, witnR:3,  repMult:0.5, bonds:{sf1:62,sf3:62}, benefits:["tutorial connection","domestic intel"], desc:"Tutorial captive. Fastest settler gossip node (1 tick). Courage 35 — lowest settler."},
+  sf3:     {name:"Settler F3",  role:"community carer",       age:33, hpCur:60,  hpMax:60,  sp:{S:4,P:5,E:5,C:5,I:5,A:4,L:5}, inf:13,  cou:38, stub:30,  regard:0,  essential:false, houseC:false, witnR:2,  repMult:0.5, bonds:{sf1:62,sf2:62,doc:42}, benefits:["Doc referral","community trust"], desc:"Only settler with outbound bond to a named NPC (Doc, str 42). doc_grief fires if Doc dies."},
+  sm1:     {name:"Settler M1",  role:"perimeter watch",       age:38, hpCur:68,  hpMax:70,  sp:{S:6,P:5,E:6,C:3,I:4,A:5,L:5}, inf:15,  cou:55, stub:45,  regard:0,  essential:false, houseC:false, witnR:4,  repMult:0.5, bonds:{sm2:50}, benefits:["perimeter awareness","Gunfight fighter (no rally)"], desc:"Courage 55 — best settler fighter. Nearest to gas station. Aware of Ringo (null bond)."},
+  sm2:     {name:"Settler M2",  role:"handyman",              age:42, hpCur:65,  hpMax:65,  sp:{S:5,P:4,E:5,C:3,I:6,A:4,L:5}, inf:11,  cou:42, stub:40,  regard:0,  essential:false, houseC:false, witnR:2,  repMult:0.5, bonds:{sm1:50,doc:28}, benefits:["pump repair (Repair 35)","handyman tasks"], desc:"Lowest social influence (11). Repair 35 — fixes pump OFF only. Functional link to pump system."},
+};
+
+const ACTS = [
+  {key:"punch",    label:"punch",             type:"bad",  repB:-25, regB:-40, hpD:8,  needsNonEss:true,  desc:"melee attack"},
+  {key:"threaten", label:"threaten (life)",   type:"bad",  repB:-20, regB:-35, hpD:0,  needsNonEss:false, desc:"verbal life threat"},
+  {key:"insult",   label:"insult",            type:"bad",  repB:-8,  regB:-15, hpD:0,  needsNonEss:false, desc:"verbal insult"},
+  {key:"steal",    label:"steal from",        type:"bad",  repB:-18, regB:-30, hpD:0,  needsNonEss:false, desc:"theft attempt"},
+  {key:"compliment",label:"compliment",       type:"good", repB:6,   regB:10,  hpD:0,  needsNonEss:false, desc:"friendly compliment"},
+  {key:"help",     label:"help out",          type:"good", repB:12,  regB:18,  hpD:0,  needsNonEss:false, desc:"helpful action"},
+  {key:"gift",     label:"give gift",         type:"good", repB:8,   regB:14,  hpD:0,  needsNonEss:false, desc:"item gift"},
+  {key:"quest",    label:"complete quest",    type:"good", repB:25,  regB:30,  hpD:0,  needsNonEss:false, desc:"quest completion"},
+];
+
+let S = {rep:0, tick:0, day:1, hour:9, sel:null, log:[], npcs:{}};
+
+function initS(){
+  S = {rep:0, tick:0, day:1, hour:9, sel:null, log:[], npcs:{}};
+  Object.keys(NPCS).forEach(id => {
+    const n = NPCS[id];
+    S.npcs[id] = {regard: n.regard, hp: n.hpCur, bens: [...n.benefits]};
+  });
+}
+initS();
+
+const clamp = (v,a,b) => Math.max(a, Math.min(b, v));
+
+function repCol(r){ return r>=40?"#0F6E56": r>=0?"var(--color-text-primary)": r>=-20?"#BA7517": r>=-40?"#E8A020": r>=-80?"#A32D2D":"#791F1F"; }
+function regCol(r){ return r>=30?"#0F6E56": r>=5?"var(--color-text-primary)": r>=-15?"#BA7517": r>=-35?"#A32D2D":"#791F1F"; }
+function regLbl(r){ return r>=60?"trusted ally": r>=30?"friendly": r>=5?"neutral": r>=-15?"cautious": r>=-35?"unfriendly": r>=-60?"hostile":"enemy"; }
+function repLbl(r){ return r>=60?"Beloved — all benefits max": r>=40?"Liked — discounts + extra dialogue": r>=20?"Respected — full access": r>=-10?"Neutral — full access": r>=-20?"Unwelcome — Chet wary": r>=-40?"Distrusted — Chet discount lost": r>=-60?"Suspect — NPCs withhold info": r>=-80?"Reviled — some NPCs hostile":"Enemy of Goodsprings"; }
+
+function hpCol(p){ return p>60?"#0F6E56": p>30?"#BA7517":"#A32D2D"; }
+
+function addLog(msg, cls){
+  const t = `d${S.day}·${String(S.hour).padStart(2,"0")}h·t${S.tick}`;
+  S.log.unshift({msg, cls, t});
+  if(S.log.length > 80) S.log.pop();
+}
+
+function doAction(actKey){
+  const tid = S.sel;
+  if(!tid) return;
+  const act = ACTS.find(a => a.key === actKey);
+  const ndef = NPCS[tid];
+  const ns = S.npcs[tid];
+  if(act.needsNonEss && ndef.essential){
+    addLog(`[blocked] ${ndef.name} is essential — cannot attack yet`, "sys");
+    render(); return;
+  }
+  const infMult = ndef.inf / 100;
+  let repD = Math.round(act.repB * ndef.repMult);
+  const prevRep = S.rep;
+  S.rep = clamp(S.rep + repD, -100, 100);
+  const prevReg = ns.regard;
+  ns.regard = clamp(ns.regard + act.regB, -100, 100);
+  if(act.hpD > 0){
+    ns.hp = Math.max(0, ns.hp - act.hpD);
+    addLog(`[action] punched ${ndef.name} — HP ${ns.hp + act.hpD}→${ns.hp}`, "bad");
+  }
+  const rs = repD >= 0 ? "+" : "";
+  const rgs = act.regB >= 0 ? "+" : "";
+  addLog(`[action] ${act.desc} → ${ndef.name} | rep ${rs}${repD} (${prevRep}→${S.rep}) | regard ${rgs}${act.regB} (${prevReg}→${ns.regard})`, act.type === "bad" ? "bad" : "good");
+  checkThresh(prevRep);
+  if(ndef.houseC || tid === "victor"){
+    addLog(`[house·channel] Victor logged: "${act.desc} → ${ndef.name}" · certainty 99%`, "sys");
+  }
+  propagate(tid, act, repD);
+  checkBens();
+  S.tick++;
+  if(S.tick % 3 === 0){ S.hour += 8; if(S.hour >= 24){ S.hour -= 24; S.day++; } }
+  render();
+}
+
+function propagate(tid, act, rawRep){
+  const tdef = NPCS[tid];
+  const infMult = tdef.inf / 100;
+  const certBase = 0.55;
+  addLog(`[gossip] propagating "${act.desc} → ${tdef.name}" · base certainty ${Math.round(certBase*100)}%`, "sys");
+  Object.keys(NPCS).forEach(id => {
+    if(id === tid) return;
+    const ndef = NPCS[id];
+    const ns = S.npcs[id];
+    const stubFactor = ndef.stub >= 70 ? 0.45 : ndef.stub >= 50 ? 0.7 : 1.0;
+    const cert = certBase * stubFactor * (ndef.witnR >= 3 ? 1 : 0.7);
+    if(cert < 0.28) return;
+    const bondToTarget = (ndef.bonds && ndef.bonds[tid]) ? ndef.bonds[tid] / 100 : 0;
+    let rDelta = 0;
+    if(act.type === "bad"){
+      rDelta = Math.round(-(Math.abs(rawRep) * cert * (0.25 + infMult * 0.4 + bondToTarget * 0.2)));
+    } else {
+      rDelta = Math.round(Math.abs(rawRep) * cert * (0.15 + infMult * 0.25));
+    }
+    if(rDelta === 0) return;
+    const prev = ns.regard;
+    ns.regard = clamp(ns.regard + rDelta, -100, 100);
+    if(ns.regard !== prev){
+      const stubNote = ndef.stub >= 70 ? " (stub filter reduced)" : "";
+      addLog(`  ${ndef.name} regard ${rDelta > 0 ? "+" : ""}${rDelta} · cert ${Math.round(cert*100)}%${stubNote}`, act.type === "bad" ? "warn" : "good");
+    }
+  });
+  if(tid !== "trudy"){
+    const ts = S.npcs["trudy"];
+    const p8cert = Math.min(certBase + 0.18, 0.95);
+    const td = act.type === "bad" ? Math.round(-p8cert * 9 * infMult) : Math.round(p8cert * 6 * infMult);
+    if(td !== 0){
+      const prev = ts.regard;
+      ts.regard = clamp(ts.regard + td, -100, 100);
+      if(ts.regard !== prev) addLog(`  Trudy P:8 boost → regard ${td > 0 ? "+" : ""}${td}`, act.type === "bad" ? "warn" : "good");
+    }
+  }
+}
+
+function checkThresh(prev){
+  const r = S.rep;
+  if(prev >= 0 && r < 0) addLog("[threshold] rep < 0 — Chet becoming wary", "warn");
+  if(prev > -20 && r <= -20) addLog("[threshold crossed] rep −20 — Chet removed store discount", "warn");
+  if(prev > -40 && r <= -40) addLog("[threshold crossed] rep −40 — NPCs now withholding information", "bad");
+  if(prev > -80 && r <= -80) addLog("[threshold crossed] rep −80 — some NPCs turning hostile", "bad");
+  if(prev < 40 && r >= 40) addLog("[threshold crossed] rep +40 — discounts + extra dialogue unlocked", "good");
+  if(prev < 60 && r >= 60) addLog("[threshold crossed] rep +60 — Trudy frames you positively in all gossip", "good");
+}
+
+function checkBens(){
+  const r = S.rep;
+  Object.keys(NPCS).forEach(id => {
+    const ndef = NPCS[id];
+    const ns = S.npcs[id];
+    let active = [...ndef.benefits];
+    if(r <= -40) active = active.filter(b => !b.includes("info") && !b.includes("advice") && !b.includes("lore") && !b.includes("tuition") && !b.includes("awareness"));
+    if(r <= -20 || ns.regard <= -20) active = active.filter(b => !b.includes("discount"));
+    if(ns.regard <= -40) active = [];
+    ns.bens = active;
+  });
+}
+
+function render(){
+  renderGlob();
+  renderGrid();
+  renderActions();
+  renderDetail();
+  renderRegBars();
+  renderLog();
+}
+
+function renderGlob(){
+  const r = S.rep;
+  const el = document.getElementById("grep");
+  el.textContent = (r > 0 ? "+" : "") + r;
+  el.style.color = repCol(r);
+  document.getElementById("glabel").textContent = repLbl(r);
+  document.getElementById("ticklabel").textContent = `day ${S.day} · ${String(S.hour).padStart(2,"0")}:00 · tick ${S.tick}`;
+  let bHTML = "";
+  if(r >= 40) bHTML += `<span class="btag bok">discounts active</span>`;
+  if(r >= 60) bHTML += `<span class="btag bok">positive gossip relay</span>`;
+  if(r <= -20) bHTML += `<span class="btag blost">Chet discount</span>`;
+  if(r <= -40) bHTML += `<span class="btag blost">info withheld</span>`;
+  if(r <= -80) bHTML += `<span class="btag blost">NPC hostility</span>`;
+  document.getElementById("gbens").innerHTML = bHTML;
+}
+
+function renderGrid(){
+  const g = document.getElementById("npcgrid");
+  g.innerHTML = "";
+  Object.keys(NPCS).forEach(id => {
+    const ndef = NPCS[id];
+    const ns = S.npcs[id];
+    const pct = Math.round((ns.hp / ndef.hpMax) * 100);
+    const rc = regCol(ns.regard);
+    const card = document.createElement("div");
+    card.className = "nc" + (S.sel === id ? " sel" : "");
+    card.dataset.npc = id;
+    card.innerHTML = `<div class="nm">${ndef.name}</div><div class="rl">${ndef.role}</div><div class="rg" style="color:${rc}">${regLbl(ns.regard)} (${ns.regard > 0 ? "+" : ""}${ns.regard})</div><div class="hpt"><div class="hpf" style="width:${pct}%;background:${hpCol(pct)}"></div></div>`;
+    g.appendChild(card);
+  });
+}
+
+function renderActions(){
+  const zone = document.getElementById("azone");
+  const lbl = document.getElementById("aclabel");
+  if(!S.sel){ zone.innerHTML = `<div style="font-size:11px;color:var(--color-text-secondary)">Select an NPC first.</div>`; return; }
+  const ndef = NPCS[S.sel];
+  lbl.textContent = `actions → ${ndef.name}`;
+  zone.innerHTML = "";
+  ACTS.forEach(act => {
+    const blocked = act.needsNonEss && ndef.essential;
+    const btn = document.createElement("button");
+    btn.className = "abtn " + act.type;
+    btn.dataset.act = act.key;
+    btn.disabled = blocked;
+    btn.title = blocked ? "Essential NPC — cannot attack yet" : "";
+    btn.textContent = act.label + (blocked ? " (essential)" : "");
+    zone.appendChild(btn);
+  });
+}
+
+function renderDetail(){
+  const zone = document.getElementById("dzone");
+  const lbl = document.getElementById("dlabel");
+  if(!S.sel){ zone.innerHTML = `<div style="font-size:11px;color:var(--color-text-secondary)">Select an NPC to inspect.</div>`; return; }
+  const id = S.sel;
+  const ndef = NPCS[id];
+  const ns = S.npcs[id];
+  lbl.textContent = `stats · ${ndef.name}`;
+  const chips = Object.entries(ndef.sp).map(([k,v]) => `<span class="chip">${k}:${v}</span>`).join("");
+  const bens = ndef.benefits.map(b => `<span class="btag ${ns.bens.includes(b) ? "bok" : "blost"}">${b}</span>`).join("");
+  zone.innerHTML = `
+    <div style="font-size:13px;font-weight:500;margin-bottom:1px">${ndef.name}</div>
+    <div style="font-size:10px;color:var(--color-text-secondary);margin-bottom:6px">${ndef.role} · age ${ndef.age}${ndef.essential ? " · <span style=color:#185FA5>essential</span>" : ""}</div>
+    <div style="margin-bottom:6px">${chips}</div>
+    <div style="font-size:10px;color:var(--color-text-secondary);line-height:1.5;margin-bottom:8px">${ndef.desc}</div>
+    <div class="drow"><span class="dk">regard</span><span style="color:${regCol(ns.regard)};font-weight:500">${ns.regard > 0 ? "+" : ""}${ns.regard} · ${regLbl(ns.regard)}</span></div>
+    <div class="drow"><span class="dk">hp</span><span>${ns.hp} / ${ndef.hpMax}</span></div>
+    <div class="drow"><span class="dk">influence</span><span>${ndef.inf}</span></div>
+    <div class="drow"><span class="dk">courage</span><span>${ndef.cou}</span></div>
+    <div class="drow"><span class="dk">stubbornness</span><span>${ndef.stub}${ndef.stub >= 70 ? " — filters gossip" : ""}</span></div>
+    <div style="margin-top:8px;font-size:10px;font-weight:500;color:var(--color-text-secondary);margin-bottom:4px">BENEFITS</div>
+    <div>${bens}</div>
+  `;
+}
+
+function renderRegBars(){
+  const area = document.getElementById("regbars");
+  area.innerHTML = Object.keys(NPCS).map(id => {
+    const ndef = NPCS[id];
+    const ns = S.npcs[id];
+    const r = ns.regard;
+    const pct = Math.round((r + 100) / 2);
+    const col = r >= 30 ? "#0F6E56" : r >= 0 ? "#185FA5" : r >= -30 ? "#BA7517" : "#A32D2D";
+    return `<div class="rbar"><span class="rname">${ndef.name}</span><div class="rtrack"><div class="rfill" style="width:${pct}%;background:${col}"></div></div><span class="rval" style="color:${col}">${r > 0 ? "+" : ""}${r}</span></div>`;
+  }).join("");
+}
+
+function renderLog(){
+  const box = document.getElementById("logbox");
+  if(!S.log.length){ box.innerHTML = `<div class="le sys">— world quiet, no events yet —</div>`; return; }
+  box.innerHTML = S.log.map(e => `<div class="le ${e.cls}">[${e.t}] ${e.msg}</div>`).join("");
+}
+
+document.getElementById("npcgrid").addEventListener("click", e => {
+  const card = e.target.closest("[data-npc]");
+  if(!card) return;
+  S.sel = card.dataset.npc;
+  render();
+});
+
+document.getElementById("azone").addEventListener("click", e => {
+  const btn = e.target.closest("[data-act]");
+  if(!btn || btn.disabled) return;
+  doAction(btn.dataset.act);
+});
+
+document.getElementById("resetbtn").addEventListener("click", () => {
+  initS();
+  render();
+});
+
+render();
+</script>

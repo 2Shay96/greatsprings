@@ -1,0 +1,513 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font-sans);font-size:13px;color:var(--color-text-primary)}
+.root{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;padding:12px}
+.panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-lg);padding:12px}
+.panel-full{grid-column:1/-1}
+.sec-label{font-size:10px;font-weight:500;color:var(--color-text-secondary);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px}
+.rep-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.rep-track{flex:1;height:6px;border-radius:3px;background:var(--color-border-tertiary);overflow:hidden;position:relative}
+.rep-fill{height:100%;border-radius:3px;transition:width .3s,background .3s}
+.rep-val{font-size:11px;font-weight:500;min-width:32px;text-align:right;font-family:var(--font-mono)}
+.rep-name{font-size:11px;min-width:68px;color:var(--color-text-secondary)}
+.npc-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(148px,1fr));gap:8px}
+.npc-card{background:var(--color-background-secondary);border:0.5px solid var(--color-border-tertiary);border-radius:var(--border-radius-md);padding:8px;cursor:pointer;transition:border-color .15s}
+.npc-card:hover{border-color:var(--color-border-primary)}
+.npc-card.selected{border-color:var(--color-text-info);border-width:1.5px}
+.npc-name{font-size:12px;font-weight:500;margin-bottom:2px}
+.npc-regard{font-size:10px;color:var(--color-text-secondary);margin-bottom:5px}
+.npc-status{font-size:10px;padding:1px 6px;border-radius:10px;display:inline-block;margin-bottom:4px}
+.hp-row{display:flex;align-items:center;gap:5px;margin-bottom:3px}
+.hp-track{flex:1;height:3px;border-radius:2px;background:var(--color-border-tertiary);overflow:hidden}
+.hp-fill{height:100%;border-radius:2px;transition:width .3s}
+.hp-label{font-size:9px;color:var(--color-text-secondary);min-width:38px;font-family:var(--font-mono)}
+.action-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}
+.act-btn{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:6px 8px;cursor:pointer;font-size:11px;font-family:var(--font-sans);color:var(--color-text-primary);text-align:left;transition:background .1s}
+.act-btn:hover{background:var(--color-background-secondary)}
+.act-btn.bad{border-color:#A32D2D;color:#791F1F}
+.act-btn.good{border-color:#0F6E56;color:#085041}
+.act-btn:disabled{opacity:.4;cursor:not-allowed}
+.log-entry{font-size:11px;padding:5px 8px;border-bottom:0.5px solid var(--color-border-tertiary);line-height:1.5;font-family:var(--font-mono)}
+.log-entry:last-child{border-bottom:none}
+.log-bad{color:#A32D2D}
+.log-good{color:#0F6E56}
+.log-sys{color:var(--color-text-secondary)}
+.log-warn{color:#854F0B}
+#log-box{max-height:180px;overflow-y:auto;background:var(--color-background-secondary);border-radius:var(--border-radius-md);border:0.5px solid var(--color-border-tertiary)}
+.threshold-row{display:flex;align-items:center;gap:6px;margin-bottom:4px;font-size:10px;color:var(--color-text-secondary)}
+.threshold-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.benefit-tag{display:inline-flex;align-items:center;gap:3px;font-size:10px;padding:2px 6px;border-radius:10px;margin:2px;border:0.5px solid}
+.benefit-ok{background:color-mix(in srgb,#E1F5EE 50%,transparent);border-color:#0F6E56;color:#085041}
+.benefit-lost{background:color-mix(in srgb,#FCEBEB 50%,transparent);border-color:#A32D2D;color:#791F1F;text-decoration:line-through}
+.stat-chip{font-size:9px;font-family:var(--font-mono);background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:3px;padding:1px 4px;margin:1px;display:inline-block}
+.npc-detail-name{font-size:14px;font-weight:500;margin-bottom:2px}
+.npc-detail-sub{font-size:11px;color:var(--color-text-secondary);margin-bottom:8px}
+.detail-row{display:flex;justify-content:space-between;font-size:11px;padding:3px 0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.detail-row:last-child{border-bottom:none}
+.detail-key{color:var(--color-text-secondary)}
+.global-rep-num{font-size:28px;font-weight:500;line-height:1}
+.rep-status-label{font-size:11px;margin-top:3px}
+#reset-btn{background:var(--color-background-primary);border:0.5px solid var(--color-border-secondary);border-radius:var(--border-radius-md);padding:4px 10px;cursor:pointer;font-size:11px;font-family:var(--font-sans);color:var(--color-text-secondary)}
+#reset-btn:hover{background:var(--color-background-secondary)}
+</style>
+
+<h2 class="sr-only">Goodsprings social simulation — perform actions against NPCs and watch the node web react in real time</h2>
+
+<div class="root">
+
+<div class="panel panel-full" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;padding:10px 14px">
+  <div>
+    <div class="sec-label" style="margin-bottom:2px">player standing · goodsprings</div>
+    <div style="display:flex;align-items:baseline;gap:10px">
+      <div class="global-rep-num" id="glob-rep">0</div>
+      <div>
+        <div class="rep-status-label" id="glob-label" style="color:var(--color-text-secondary)">Neutral — full access</div>
+        <div id="glob-benefits" style="margin-top:3px"></div>
+      </div>
+    </div>
+  </div>
+  <div style="display:flex;flex-direction:column;gap:4px;min-width:160px">
+    <div class="threshold-row"><div class="threshold-dot" style="background:#0F6E56"></div>+40 → discounts · extra dialogue</div>
+    <div class="threshold-row"><div class="threshold-dot" style="background:#BA7517"></div>−20 → Chet removes discount</div>
+    <div class="threshold-row"><div class="threshold-dot" style="background:#E8A020"></div>−40 → NPCs withhold info</div>
+    <div class="threshold-row"><div class="threshold-dot" style="background:#A32D2D"></div>−80 → some NPCs hostile</div>
+  </div>
+  <button id="reset-btn">reset world</button>
+</div>
+
+<div class="panel" style="grid-column:1/-1">
+  <div class="sec-label">select target npc</div>
+  <div class="npc-grid" id="npc-grid"></div>
+</div>
+
+<div class="panel">
+  <div class="sec-label" id="action-label">choose action</div>
+  <div id="action-area">
+    <div style="font-size:11px;color:var(--color-text-secondary)">Select an NPC above first.</div>
+  </div>
+</div>
+
+<div class="panel">
+  <div class="sec-label" id="detail-label">npc detail</div>
+  <div id="detail-area">
+    <div style="font-size:11px;color:var(--color-text-secondary)">Select an NPC to inspect.</div>
+  </div>
+</div>
+
+<div class="panel panel-full">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+    <div class="sec-label" style="margin-bottom:0">world event log</div>
+    <div style="font-size:10px;color:var(--color-text-secondary)" id="tick-label">day 1 · 09:37</div>
+  </div>
+  <div id="log-box"></div>
+</div>
+
+<div class="panel panel-full">
+  <div class="sec-label">npc regard overview</div>
+  <div id="regard-bars"></div>
+</div>
+
+</div>
+
+<script>
+const NPCS={
+  trudy:{id:"trudy",name:"Trudy",role:"saloon owner",age:29,hp:[90,100],hpMax:100,special:{S:4,P:8,E:5,C:8,I:7,A:4,L:5},influence:90,courage:70,stubbornness:30,regard:0,mood:"friendly",essential:false,
+    bonds:{doc:72,pete:55,sunny:58,chet:50,sf2:30,sf3:28,sm1:22,sm2:18},
+    benefits:["gossip relay","quest advice","saloon access","rally bonus +15"],
+    description:"Social backbone. C:8 makes her the town's loudest relay — her regard for you colours every NPC's read.",
+    witnessRange:6,houseChannel:false},
+  doc:{id:"doc",name:"Doc Mitchell",role:"physician",age:58,hp:[72,85],hpMax:85,special:{S:3,P:6,E:4,C:5,I:9,A:4,L:6},influence:48,courage:45,stubbornness:40,regard:0,mood:"calm",essential:true,
+    bonds:{trudy:72,sf3:42,sm2:28,sunny:35},
+    benefits:["healing services","rad treatment","SPECIAL recheck","med supplies discount"],
+    description:"I:9 means he correlates events accurately. Essential until quest complete — can't be attacked yet.",
+    witnessRange:3,houseChannel:false},
+  sunny:{id:"sunny",name:"Sunny Smiles",role:"wilderness guide",age:24,hp:[96,100],hpMax:100,special:{S:5,P:8,E:6,C:5,I:5,A:7,L:6},influence:55,courage:65,stubbornness:25,regard:0,mood:"optimistic",essential:false,
+    bonds:{trudy:58,pete:35,doc:35},
+    benefits:["tutorial quests","gecko hunting guide","crafting tuition","Cheyenne early warnings"],
+    description:"P:8 + A:7 — earliest human detection node. She and Cheyenne form the net's environmental sensor pair.",
+    witnessRange:5,houseChannel:false},
+  pete:{id:"pete",name:"Easy Pete",role:"prospector",age:67,hp:[61,75],hpMax:75,special:{S:6,P:5,E:5,C:4,I:5,A:3,L:7},influence:30,courage:60,stubbornness:85,regard:0,mood:"stoic",essential:false,
+    bonds:{sunny:35,trudy:55},
+    benefits:["dynamite (Explosives 25+)","prospecting tips","old-timer lore"],
+    description:"Stubbornness 85 — gossip rarely reaches him. Explosives 60. If Trudy doesn't bring news to him directly, he doesn't hear it.",
+    witnessRange:2,houseChannel:false},
+  chet:{id:"chet",name:"Chet",role:"store owner",age:35,hp:[65,70],hpMax:70,special:{S:3,P:5,E:4,C:5,I:6,A:4,L:4},influence:38,courage:22,stubbornness:50,regard:0,mood:"anxious",essential:false,
+    bonds:{trudy:50},
+    benefits:["general store access","10% discount (rep ≥ 0)","crafting components","ammo stock"],
+    description:"Courage 22 — lowest in Goodsprings. Won't fight. Removes discount early and independently of town rep threshold.",
+    witnessRange:3,houseChannel:false},
+  ringo:{id:"ringo",name:"Ringo",role:"Crimson Caravan merchant",age:28,hp:[55,70],hpMax:70,special:{S:4,P:6,E:4,C:4,I:5,A:6,L:3},influence:18,courage:35,stubbornness:20,regard:0,mood:"scared",essential:false,
+    bonds:{},
+    benefits:["Crimson Caravan introduction","caravan route info","Ghost Town Gunfight quest start"],
+    description:"L:3 — lowest luck in net. Wounds from attack. No local bonds. His low influence (18) dampens rep swings if you harm him.",
+    witnessRange:2,houseChannel:false},
+  victor:{id:"victor",name:"Victor",role:"Securitron",age:0,hp:[200,200],hpMax:200,special:{S:9,P:7,E:10,C:6,I:7,A:5,L:5},influence:0,courage:99,stubbornness:0,regard:0,mood:"cheerful",essential:true,
+    bonds:{},
+    benefits:["Mr House awareness","early Mojave escort","quest trigger"],
+    description:"Essential. Bypasses gossip engine — logs to Mr House directly. I:7 means his reports are accurate. Rep tracked separately.",
+    witnessRange:8,houseChannel:true},
+  joe_cobb:{id:"joe_cobb",name:"Joe Cobb",role:"Powder Ganger",age:34,hp:[80,80],hpMax:80,special:{S:7,P:4,E:6,C:3,I:3,A:5,L:4},influence:0,courage:80,stubbornness:60,regard:-80,mood:"aggressive",essential:false,
+    bonds:{},
+    benefits:[],
+    description:"External pressure, not a town node. Presence applies −10 to all NPC effective courage. Bond with all GS NPCs: −80. I:3 — inaccurate reports to PG network.",
+    witnessRange:4,houseChannel:true},
+  sf1:{id:"sf1",name:"Settler F1",role:"field worker",age:31,hp:[58,60],hpMax:60,special:{S:5,P:4,E:5,C:4,I:4,A:4,L:5},influence:12,courage:40,stubbornness:35,regard:0,mood:"content",essential:false,
+    bonds:{sf2:62,sf3:62,chet:25},
+    benefits:["field location info","settler morale"],
+    description:"Field worker. Needs Trudy's rally to fight. Gossip delay: 2–3 ticks.",
+    witnessRange:2,houseChannel:false},
+  sf2:{id:"sf2",name:"Settler F2",role:"domestic",age:26,hp:[55,55],hpMax:55,special:{S:3,P:5,E:4,C:5,I:4,A:5,L:5},influence:14,courage:35,stubbornness:20,regard:0,mood:"nervous",essential:false,
+    bonds:{sf1:62,sf3:62},
+    benefits:["tutorial connection","domestic intel"],
+    description:"Tutorial captive. Fastest settler gossip node (1 tick). Courage 35 — lowest settler, post-trauma.",
+    witnessRange:3,houseChannel:false},
+  sf3:{id:"sf3",name:"Settler F3",role:"community carer",age:33,hp:[60,60],hpMax:60,special:{S:4,P:5,E:5,C:5,I:5,A:4,L:5},influence:13,courage:38,stubbornness:30,regard:0,mood:"steady",essential:false,
+    bonds:{sf1:62,sf2:62,doc:42},
+    benefits:["Doc referral","community trust"],
+    description:"Only settler with outbound bond to a named NPC (Doc, str 42). doc_grief flag fires if Doc dies.",
+    witnessRange:2,houseChannel:false},
+  sm1:{id:"sm1",name:"Settler M1",role:"perimeter watch",age:38,hp:[68,70],hpMax:70,special:{S:6,P:5,E:6,C:3,I:4,A:5,L:5},influence:15,courage:55,stubbornness:45,regard:0,mood:"watchful",essential:false,
+    bonds:{sm2:50},
+    benefits:["perimeter awareness","Gunfight fighter (no rally needed)"],
+    description:"Courage 55 — best fighter in settler cluster. Aware of Ringo's presence (null bond). Nearest to gas station.",
+    witnessRange:4,houseChannel:false},
+  sm2:{id:"sm2",name:"Settler M2",role:"handyman",age:42,hp:[65,65],hpMax:65,special:{S:5,P:4,E:5,C:3,I:6,A:4,L:5},influence:11,courage:42,stubbornness:40,regard:0,mood:"practical",essential:false,
+    bonds:{sm1:50,doc:28},
+    benefits:["pump repair (Repair 35)","handyman tasks"],
+    description:"Lowest social influence (11). Repair 35 — fixes pump OFF state only. Functional link to pump system.",
+    witnessRange:2,houseChannel:false},
+};
+
+const ACTIONS={
+  punch:{label:"punch",type:"bad",repBase:-25,regardBase:-40,hpDmg:8,witnessMult:0.8,desc:"melee attack",requiresNonEssential:true},
+  threaten:{label:"threaten (life)",type:"bad",repBase:-20,regardBase:-35,hpDmg:0,witnessMult:0.9,desc:"verbal life threat",requiresNonEssential:false},
+  insult:{label:"insult",type:"bad",repBase:-8,regardBase:-15,hpDmg:0,witnessMult:0.7,desc:"verbal insult",requiresNonEssential:false},
+  steal:{label:"steal from",type:"bad",repBase:-18,regardBase:-30,hpDmg:0,witnessMult:0.85,desc:"theft attempt",requiresNonEssential:false},
+  compliment:{label:"compliment",type:"good",repBase:6,regardBase:10,hpDmg:0,witnessMult:1,desc:"friendly compliment",requiresNonEssential:false},
+  help:{label:"help out",type:"good",repBase:12,regardBase:18,hpDmg:0,witnessMult:1,desc:"helpful action",requiresNonEssential:false},
+  gift:{label:"give gift",type:"good",repBase:8,regardBase:14,hpDmg:0,witnessMult:1,desc:"item gift",requiresNonEssential:false},
+  quest:{label:"complete quest",type:"good",repBase:25,regardBase:30,hpDmg:0,witnessMult:1,desc:"quest completion",requiresNonEssential:false},
+};
+
+let state={
+  rep:0,
+  tick:0,
+  day:1,
+  hour:9,
+  min:37,
+  npcs:{},
+  selectedNpc:null,
+  log:[],
+};
+
+function initState(){
+  state.rep=0;state.tick=0;state.day=1;state.hour=9;state.min=37;state.log=[];state.selectedNpc=null;
+  Object.keys(NPCS).forEach(id=>{
+    const n=NPCS[id];
+    state.npcs[id]={
+      regard:n.regard,
+      hp:n.hp[0],
+      mood:n.mood,
+      benefitsActive:[...n.benefits],
+      knowsAboutPlayer:id==="trudy"||id==="victor",
+    };
+  });
+}
+initState();
+
+function clamp(v,mn,mx){return Math.max(mn,Math.min(mx,v));}
+
+function repColor(r){
+  if(r>=40)return"#0F6E56";
+  if(r>=0)return"var(--color-text-primary)";
+  if(r>=-20)return"#BA7517";
+  if(r>=-40)return"#E8A020";
+  if(r>=-80)return"#A32D2D";
+  return"#791F1F";
+}
+
+function regardColor(r){
+  if(r>=40)return"#0F6E56";
+  if(r>=10)return"var(--color-text-primary)";
+  if(r>=-10)return"#BA7517";
+  if(r>=-30)return"#A32D2D";
+  return"#791F1F";
+}
+
+function regardLabel(r){
+  if(r>=60)return"trusted ally";
+  if(r>=30)return"friendly";
+  if(r>=5)return"neutral";
+  if(r>=-15)return"cautious";
+  if(r>=-35)return"unfriendly";
+  if(r>=-60)return"hostile";
+  return"enemy";
+}
+
+function repLabel(r){
+  if(r>=60)return"Beloved — all benefits unlocked";
+  if(r>=40)return"Liked — discounts + extra dialogue";
+  if(r>=20)return"Respected — full access";
+  if(r>=-10)return"Neutral — full access";
+  if(r>=-20)return"Unwelcome — Chet wary";
+  if(r>=-40)return"Distrusted — Chet discount lost";
+  if(r>=-60)return"Suspect — NPCs withhold info";
+  if(r>=-80)return"Reviled — some NPCs hostile";
+  return"Enemy of Goodsprings — openly hostile";
+}
+
+function advanceTick(hours){
+  state.hour+=hours;
+  while(state.hour>=24){state.hour-=24;state.day++;}
+  state.tick++;
+}
+
+function addLog(msg,cls){
+  const t=`day ${state.day} · ${String(state.hour).padStart(2,"0")}:${String(state.min).padStart(2,"0")}`;
+  state.log.unshift({msg,cls,t});
+  if(state.log.length>60)state.log.pop();
+}
+
+function computeWitnesses(targetId,actionType){
+  const target=NPCS[targetId];
+  const witnesses=[];
+  Object.keys(NPCS).forEach(id=>{
+    if(id===targetId||id===state.selectedNpc)return;
+    const npc=NPCS[id];
+    const withinRange=npc.witnessRange>=target.witnessRange*0.6;
+    if(withinRange&&Math.random()<0.55) witnesses.push(id);
+  });
+  return witnesses;
+}
+
+function propagateGossip(targetId,actionKey,rawRep,witnesses){
+  const action=ACTIONS[actionKey];
+  const target=NPCS[targetId];
+  const certaintyBase=witnesses.length>0?0.75:0.45;
+  addLog(`[gossip tick +8hr] propagating event: "${action.desc} → ${target.name}"`,`log-sys`);
+  advanceTick(8);
+  Object.keys(NPCS).forEach(id=>{
+    if(id===targetId)return;
+    const npc=NPCS[id];
+    const ns=state.npcs[id];
+    const isWitness=witnesses.includes(id);
+    const certainty=isWitness?0.95:certaintyBase*(npc.stubbornness<50?1:0.6);
+    if(certainty<0.35)return;
+    const bondToTarget=(npc.bonds&&npc.bonds[targetId])||0;
+    const influenceMult=target.influence/100;
+    let regardDelta=0;
+    if(action.type==="bad"){
+      regardDelta=Math.round(-(Math.abs(rawRep)*certainty*(0.3+influenceMult*0.4)));
+      if(bondToTarget>50) regardDelta=Math.round(regardDelta*1.4);
+    } else {
+      regardDelta=Math.round(rawRep*certainty*(0.2+influenceMult*0.3));
+    }
+    if(regardDelta===0)return;
+    const before=ns.regard;
+    ns.regard=clamp(ns.regard+regardDelta,-100,100);
+    if(ns.regard!==before){
+      const sign=regardDelta>0?"+":"";
+      addLog(`  ${npc.name} regard ${sign}${regardDelta} (certainty ${Math.round(certainty*100)}%${isWitness?" · witnessed":""})`,action.type==="bad"?"log-warn":"log-good");
+    }
+  });
+  if(NPCS.trudy&&!witnesses.includes("trudy")&&certaintyBase>0.5){
+    const ts=state.npcs.trudy;
+    const p8boost=0.15;
+    const adjustedCertainty=Math.min(certaintyBase+p8boost,0.95);
+    const delta=action.type==="bad"?Math.round(-adjustedCertainty*8):Math.round(adjustedCertainty*5);
+    ts.regard=clamp(ts.regard+delta,-100,100);
+    addLog(`  Trudy (P:8 boost) regard ${delta>0?"+":""}${delta} · certainty ${Math.round(adjustedCertainty*100)}%`,"log-warn");
+  }
+}
+
+function applyAction(actionKey){
+  const tid=state.selectedNpc;
+  if(!tid)return;
+  const action=ACTIONS[actionKey];
+  const target=NPCS[tid];
+  const ns=state.npcs[tid];
+  if(action.requiresNonEssential&&target.essential){
+    addLog(`[blocked] ${target.name} is essential — cannot attack yet`,"log-sys");
+    render();return;
+  }
+  advanceTick(0);
+  const influenceMult=target.influence/100;
+  let repDelta=Math.round(action.repBase*(1-influenceMult*0.3));
+  if(target.id==="ringo") repDelta=Math.round(repDelta*0.8);
+  if(target.id==="trudy") repDelta=Math.round(repDelta*1.5);
+  if(target.id==="doc") repDelta=Math.round(repDelta*1.2);
+  const beforeRep=state.rep;
+  state.rep=clamp(state.rep+repDelta,-100,100);
+  const beforeRegard=ns.regard;
+  ns.regard=clamp(ns.regard+action.regardBase,-100,100);
+  if(action.hpDmg>0){
+    ns.hp=Math.max(0,ns.hp-action.hpDmg);
+    addLog(`[action] punched ${target.name} — HP ${ns.hp+action.hpDmg} → ${ns.hp}`,"log-bad");
+  }
+  const sign=repDelta>=0?"+":"";
+  const rsign=action.regardBase>=0?"+":"";
+  addLog(`[action] ${action.desc} → ${target.name} | rep ${sign}${repDelta} (${beforeRep}→${state.rep}) | ${target.name} regard ${rsign}${action.regardBase} (${beforeRegard}→${ns.regard})`,action.type==="bad"?"log-bad":"log-good");
+  const witnesses=computeWitnesses(tid,actionKey);
+  if(witnesses.length>0){
+    addLog(`[witness] seen by: ${witnesses.map(w=>NPCS[w].name).join(", ")}`,"log-warn");
+  }
+  if(target.houseChannel||NPCS.victor.witnessRange>=4){
+    addLog(`[house channel] Victor logged: "${action.desc} → ${target.name}" · certainty 99%`,"log-sys");
+  }
+  checkThresholds(beforeRep);
+  propagateGossip(tid,actionKey,repDelta,witnesses);
+  checkBenefits();
+  render();
+}
+
+function checkThresholds(before){
+  const r=state.rep;
+  if(before>=0&&r<0) addLog("[threshold] rep crossed 0 — Chet becoming wary","log-warn");
+  if(before>-20&&r<=-20) addLog("[threshold] rep −20 — Chet removed store discount","log-warn");
+  if(before>-40&&r<=-40) addLog("[threshold] rep −40 — NPCs now withholding information","log-bad");
+  if(before>-80&&r<=-80) addLog("[threshold] rep −80 — some NPCs turning hostile","log-bad");
+  if(before<40&&r>=40) addLog("[threshold] rep +40 — unlocked: discounts + extra dialogue","log-good");
+  if(before<60&&r>=60) addLog("[threshold] rep +60 — Trudy frames you positively in all gossip","log-good");
+}
+
+function checkBenefits(){
+  const r=state.rep;
+  Object.keys(NPCS).forEach(id=>{
+    const npc=NPCS[id];
+    const ns=state.npcs[id];
+    let active=[...npc.benefits];
+    if(r<=-40){
+      active=active.filter(b=>!b.includes("info")&&!b.includes("advice")&&!b.includes("lore")&&!b.includes("tuition")&&!b.includes("awareness"));
+    }
+    if(r<=-20||ns.regard<=-20){
+      active=active.filter(b=>!b.includes("discount"));
+    }
+    if(ns.regard<=-40){
+      active=[];
+    }
+    ns.benefitsActive=active;
+  });
+}
+
+function renderNpcGrid(){
+  const g=document.getElementById("npc-grid");
+  g.innerHTML="";
+  Object.keys(NPCS).forEach(id=>{
+    const npc=NPCS[id];
+    const ns=state.npcs[id];
+    const rc=regardColor(ns.regard);
+    const pct=Math.round((ns.hp/npc.hpMax)*100);
+    const hpCol=pct>60?"#0F6E56":pct>30?"#BA7517":"#A32D2D";
+    const card=document.createElement("div");
+    card.className="npc-card"+(state.selectedNpc===id?" selected":"");
+    card.innerHTML=`
+      <div class="npc-name">${npc.name}</div>
+      <div class="npc-regard" style="color:${rc}">${regardLabel(ns.regard)} (${ns.regard>0?"+":""}${ns.regard})</div>
+      <div class="hp-row"><span class="hp-label">${ns.hp}/${npc.hpMax} HP</span><div class="hp-track"><div class="hp-fill" style="width:${pct}%;background:${hpCol}"></div></div></div>
+      ${npc.essential?`<span class="npc-status" style="background:color-mix(in srgb,#E6F1FB 60%,transparent);border:0.5px solid #185FA5;color:#0C447C;font-size:9px">essential</span>`:""}
+      ${npc.houseChannel?`<span class="npc-status" style="background:color-mix(in srgb,#EEEDFE 60%,transparent);border:0.5px solid #534AB7;color:#3C3489;font-size:9px">house channel</span>`:""}
+    `;
+    card.onclick=()=>{state.selectedNpc=id;render();};
+    g.appendChild(card);
+  });
+}
+
+function renderActions(){
+  const area=document.getElementById("action-area");
+  const label=document.getElementById("action-label");
+  if(!state.selectedNpc){area.innerHTML=`<div style="font-size:11px;color:var(--color-text-secondary)">Select an NPC above first.</div>`;return;}
+  const npc=NPCS[state.selectedNpc];
+  label.textContent=`actions → ${npc.name}`;
+  let html=`<div class="action-grid">`;
+  Object.entries(ACTIONS).forEach(([key,act])=>{
+    const blocked=act.requiresNonEssential&&npc.essential;
+    html+=`<button class="act-btn ${act.type}"${blocked?` disabled title="Essential NPC — cannot attack"`:""} onclick="applyAction('${key}')">${act.label}${blocked?" (essential)":""}</button>`;
+  });
+  html+=`</div>`;
+  area.innerHTML=html;
+}
+
+function renderDetail(){
+  const area=document.getElementById("detail-area");
+  const label=document.getElementById("detail-label");
+  if(!state.selectedNpc){area.innerHTML=`<div style="font-size:11px;color:var(--color-text-secondary)">Select an NPC to inspect.</div>`;return;}
+  const id=state.selectedNpc;
+  const npc=NPCS[id];
+  const ns=state.npcs[id];
+  label.textContent=`stats · ${npc.name}`;
+  const sp=Object.entries(npc.special).map(([k,v])=>`<span class="stat-chip">${k}:${v}</span>`).join("");
+  const benefits=npc.benefits.map(b=>{
+    const active=ns.benefitsActive.includes(b);
+    return`<span class="benefit-tag ${active?"benefit-ok":"benefit-lost}">${b}</span>`;
+  }).join("");
+  area.innerHTML=`
+    <div class="npc-detail-name">${npc.name}</div>
+    <div class="npc-detail-sub">${npc.role} · age ${npc.age}</div>
+    <div style="margin-bottom:6px">${sp}</div>
+    <div style="margin-bottom:8px;font-size:11px;color:var(--color-text-secondary);line-height:1.5">${npc.description}</div>
+    <div class="detail-row"><span class="detail-key">regard</span><span style="color:${regardColor(ns.regard)};font-weight:500">${ns.regard>0?"+":""}${ns.regard} · ${regardLabel(ns.regard)}</span></div>
+    <div class="detail-row"><span class="detail-key">hp</span><span>${ns.hp} / ${npc.hpMax}</span></div>
+    <div class="detail-row"><span class="detail-key">influence</span><span>${npc.influence}</span></div>
+    <div class="detail-row"><span class="detail-key">courage</span><span>${npc.courage}</span></div>
+    <div class="detail-row"><span class="detail-key">stubbornness</span><span>${npc.stubbornness} ${npc.stubbornness>=70?"(filters gossip)":""}</span></div>
+    <div class="detail-row"><span class="detail-key">mood</span><span>${ns.mood}</span></div>
+    <div style="margin-top:8px"><div class="sec-label" style="margin-bottom:4px">benefits</div>${benefits}</div>
+  `;
+}
+
+function renderRepBars(){
+  const area=document.getElementById("regard-bars");
+  let html="";
+  Object.keys(NPCS).forEach(id=>{
+    const npc=NPCS[id];
+    const ns=state.npcs[id];
+    const r=ns.regard;
+    const pct=Math.round((r+100)/2);
+    const col=r>=30?"#0F6E56":r>=0?"#185FA5":r>=-30?"#BA7517":"#A32D2D";
+    html+=`<div class="rep-row">
+      <span class="rep-name">${npc.name}</span>
+      <div class="rep-track"><div class="rep-fill" style="width:${pct}%;background:${col}"></div></div>
+      <span class="rep-val" style="color:${col}">${r>0?"+":""}${r}</span>
+    </div>`;
+  });
+  area.innerHTML=html;
+}
+
+function renderGlobalRep(){
+  const r=state.rep;
+  document.getElementById("glob-rep").textContent=(r>0?"+":"")+r;
+  document.getElementById("glob-rep").style.color=repColor(r);
+  document.getElementById("glob-label").textContent=repLabel(r);
+  document.getElementById("tick-label").textContent=`day ${state.day} · ${String(state.hour).padStart(2,"0")}:${String(state.min).padStart(2,"0")} · tick ${state.tick}`;
+  const lostBenefits=[];
+  if(r<-40)lostBenefits.push("info withheld");
+  if(r<-20)lostBenefits.push("Chet discount");
+  if(r<-80)lostBenefits.push("NPC hostility");
+  const activeBenefits=[];
+  if(r>=40)activeBenefits.push("discounts active");
+  if(r>=60)activeBenefits.push("positive gossip relay");
+  let bHTML="";
+  activeBenefits.forEach(b=>{bHTML+=`<span class="benefit-tag benefit-ok">${b}</span>`;});
+  lostBenefits.forEach(b=>{bHTML+=`<span class="benefit-tag benefit-lost">${b}</span>`;});
+  document.getElementById("glob-benefits").innerHTML=bHTML;
+}
+
+function renderLog(){
+  const box=document.getElementById("log-box");
+  if(state.log.length===0){box.innerHTML=`<div class="log-entry log-sys">— world quiet, no events yet —</div>`;return;}
+  box.innerHTML=state.log.map(e=>`<div class="log-entry ${e.cls||""}">[${e.t}] ${e.msg}</div>`).join("");
+}
+
+function render(){
+  renderGlobalRep();
+  renderNpcGrid();
+  renderActions();
+  renderDetail();
+  renderRepBars();
+  renderLog();
+}
+
+document.getElementById("reset-btn").onclick=()=>{initState();render();};
+render();
+</script>

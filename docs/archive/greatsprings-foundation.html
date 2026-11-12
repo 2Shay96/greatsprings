@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GREATSPRINGS — FOUNDATION DOCUMENT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pip:#46e878; --pip-bright:#b6ffd2; --pip-dim:#2a8a52; --faint:#123a24;
+  --bg:#03100a; --bg2:#061a10; --panel:#082315; --code:#04150d;
+  --amber:#ffb259; --red:#ff6a5e; --cyan:#5fd9ff;
+  --mono:'Share Tech Mono',ui-monospace,monospace; --crt:'VT323',var(--mono);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:#cfeede;font-family:var(--mono);font-size:16px;line-height:1.72;
+  background-image:radial-gradient(140% 90% at 50% 0%,rgba(70,232,120,.045),transparent 55%)}
+#layout{display:grid;grid-template-columns:230px 1fr;max-width:1080px;margin:0 auto;gap:0}
+/* nav */
+#nav{position:sticky;top:0;align-self:start;height:100vh;overflow:auto;padding:26px 14px 40px;border-right:1px solid var(--faint)}
+#nav .brand{font-family:var(--crt);font-size:23px;color:var(--pip-bright);line-height:1;letter-spacing:1px;text-shadow:0 0 10px rgba(70,232,120,.35)}
+#nav .ver{color:var(--pip-dim);font-size:12px;margin:2px 0 18px}
+#nav a{display:block;color:var(--pip-dim);text-decoration:none;font-size:13px;padding:3px 8px;border-left:2px solid transparent}
+#nav a:hover{color:var(--pip)}
+#nav a.on{color:var(--pip-bright);border-left-color:var(--pip);background:rgba(70,232,120,.06)}
+#nav .nz{color:var(--faint);font-size:11px;margin:14px 0 4px;letter-spacing:2px}
+/* content */
+main{padding:34px 40px 140px;max-width:800px;overflow:hidden}
+h1{font-family:var(--crt);font-size:40px;color:var(--pip-bright);letter-spacing:1px;margin:0 0 2px;line-height:1;text-shadow:0 0 14px rgba(70,232,120,.3)}
+.tag{color:var(--pip-dim);font-size:14px;margin:0 0 30px}
+h2{font-family:var(--crt);font-size:27px;color:var(--pip);letter-spacing:1px;margin:46px 0 6px;padding-top:14px;border-top:1px solid var(--faint)}
+h2 .nr{color:var(--pip-dim);font-size:18px;margin-right:8px}
+h3{font-family:var(--crt);font-size:20px;color:var(--pip-bright);margin:26px 0 4px;letter-spacing:.5px}
+p{margin:10px 0}
+strong{color:var(--pip-bright)}
+em{color:var(--amber);font-style:normal}
+.dim{color:var(--pip-dim)}
+a.inl{color:var(--cyan);text-decoration:none;border-bottom:1px dotted var(--cyan)}
+ul,ol{margin:10px 0;padding-left:22px}
+li{margin:5px 0}
+code{background:var(--code);color:var(--pip-bright);padding:1px 5px;border:1px solid var(--faint);font-size:14px}
+pre{background:var(--code);border:1px solid var(--faint);border-left:3px solid var(--pip-dim);padding:14px 16px;overflow:auto;font-size:13.5px;line-height:1.55;color:#bfe9cf;margin:14px 0}
+pre .c{color:var(--pip-dim)} pre .k{color:var(--cyan)} pre .s{color:var(--amber)}
+.law{background:var(--panel);border:1px solid var(--pip-dim);border-left:4px solid var(--pip);padding:14px 18px;margin:14px 0}
+.law .ln{font-family:var(--crt);font-size:18px;color:var(--pip-bright);letter-spacing:1px}
+.creed{background:linear-gradient(180deg,rgba(70,232,120,.08),transparent);border:1px solid var(--pip);
+  padding:20px 22px;margin:18px 0 8px;text-align:center}
+.creed .big{font-family:var(--crt);font-size:25px;color:var(--pip-bright);line-height:1.25;text-shadow:0 0 12px rgba(70,232,120,.35)}
+.creed .sm{color:var(--pip-dim);font-size:13px;margin-top:8px}
+.callout{border:1px solid var(--amber);border-left:4px solid var(--amber);background:rgba(255,178,89,.05);padding:12px 16px;margin:14px 0}
+.callout .h{font-family:var(--crt);font-size:17px;color:var(--amber);letter-spacing:1px}
+.settled{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0}
+.settled span{border:1px solid var(--pip-dim);background:var(--bg2);padding:5px 11px;font-size:13px;color:var(--pip-bright)}
+table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px}
+th,td{border:1px solid var(--faint);padding:6px 9px;text-align:left;vertical-align:top}
+th{font-family:var(--crt);font-size:15px;color:var(--pip);letter-spacing:1px;font-weight:400}
+td.n{color:var(--pip-bright);white-space:nowrap}
+.flow{font-family:var(--crt);font-size:17px;color:var(--cyan);background:var(--code);border:1px solid var(--faint);padding:10px 14px;margin:12px 0;letter-spacing:.5px;line-height:1.8}
+.flow b{color:var(--pip-bright)}
+.roster td:first-child{color:var(--pip-bright);white-space:nowrap}
+hr{border:0;border-top:1px solid var(--faint);margin:30px 0}
+.foot{color:var(--pip-dim);font-size:13px;margin-top:40px;border-top:1px solid var(--faint);padding-top:14px}
+@media(max-width:820px){
+  #layout{grid-template-columns:1fr}
+  #nav{position:static;height:auto;border-right:0;border-bottom:1px solid var(--faint)}
+  #nav .nz{display:inline-block;margin-right:10px}
+  main{padding:24px 18px 100px}
+  h1{font-size:32px}
+}
+</style>
+</head>
+<body>
+<div id="layout">
+  <nav id="nav">
+    <div class="brand">GREATSPRINGS</div>
+    <div class="ver">FOUNDATION \u00b7 v1.0 \u00b7 V20 spine</div>
+    <div class="nz">CORE</div>
+    <a href="#creed">The Constitution</a>
+    <a href="#scope">0 \u00b7 Settled Scope</a>
+    <a href="#arch">1 \u00b7 Architecture</a>
+    <a href="#boundary">2 \u00b7 Engine / DM Boundary</a>
+    <div class="nz">THE GEM</div>
+    <a href="#generator">3 \u00b7 The Grounded Generator</a>
+    <div class="nz">THE SPINE</div>
+    <a href="#schema">4 \u00b7 Frozen State Schema</a>
+    <a href="#relationship">5 \u00b7 Relationship Model</a>
+    <a href="#save">6 \u00b7 Save &amp; Replay</a>
+    <a href="#severance">7 \u00b7 Severance = Consequence</a>
+    <div class="nz">THE WORLD</div>
+    <a href="#cast">8 \u00b7 The 13</a>
+    <a href="#order">9 \u00b7 Build Order</a>
+    <a href="#open">10 \u00b7 Left Open</a>
+  </nav>
+
+  <main>
+    <h1>THE FOUNDATION</h1>
+    <p class="tag">Greatsprings \u2014 Goodsprings Reimagined. The canonical spine specification. Everything is built on this; nothing contradicts it.</p>
+
+    <section id="creed">
+      <div class="creed">
+        <div class="big">A grounded improv author,<br>not a creative god.<br><span style="color:var(--pip)">Consistent consequence,<br>not infinite content.</span></div>
+        <div class="sm">This is the constitution. Every feature, every decision, every line of code is tested against it.<br>If a thing needs the god, it is out. If it produces a consequence the world remembers, it is in.</div>
+      </div>
+
+      <h3>The Articles</h3>
+      <div class="law"><span class="ln">I \u2014 One Truth, One Door.</span> There is a single state tree and a single mutation path. Nothing changes the world except an <code>effect</code> passed through <code>applyEffect</code>. No system reaches around it.</div>
+      <div class="law"><span class="ln">II \u2014 The DM Narrates and Proposes; It Never Adjudicates.</span> The model may emit prose, classifications, and proposals. It may never set a number. Time, regard, XP, conditions, and all consequences are engine-owned. A model that tries to adjudicate is filtered at the door.</div>
+      <div class="law"><span class="ln">III \u2014 Grounded Author, Not God.</span> The DM may only propose content assembled from assets, cast, and lore that already exist. Every proposal passes canon + schema + lore validation before it commits. A rejected proposal never reaches the player.</div>
+      <div class="law"><span class="ln">IV \u2014 Consistent Consequence, Not Infinite Content.</span> "Account for any choice" means the world stays valid and consequential for any action \u2014 not that every action manufactures a new quest. A remembered wasteland is a correct outcome.</div>
+      <div class="law"><span class="ln">V \u2014 Severance Over Deletion.</span> A node is never deleted. It is severed: its state set, its consequences run, its history written, the node kept. The world's memory is never a gap.</div>
+      <div class="law"><span class="ln">VI \u2014 Canon Is Write-Only to the Simulation.</span> The sim writes history it never reads. Only the narrator reads canon. Canon is never contradicted.</div>
+      <div class="law"><span class="ln">VII \u2014 Determinism Is Law.</span> Truth is the state tree; prose is a disposable view. All randomness seeds from state; iteration order is fixed; no wall-clock in logic. AI output is frozen to concrete effects at commit-time. <em>Replay re-runs the log, never the model.</em></div>
+      <div class="law"><span class="ln">VIII \u2014 The ID Is Geography, Not Politics.</span> <code>{type}.{region}.{uid}</code>, frozen. Goodsprings is <code>gs</code> even when the Legion renames it.</div>
+      <div class="law"><span class="ln">IX \u2014 Scope Is Law.</span> 13 NPCs, one town, simulation-first. Combat is deferred. The dangling-reference backlog is the scope boundary \u2014 three open at most.</div>
+    </section>
+
+    <h2 id="scope"><span class="nr">0</span>Settled Scope</h2>
+    <p>These are no longer open questions. They were decided in the grilling and they anchor everything below. Re-opening one is a foundation change, not a feature tweak.</p>
+    <div class="settled">
+      <span>Goodsprings, reimagined \u2014 one town</span>
+      <span>13 primary NPCs</span>
+      <span>Simulation-first</span>
+      <span>Immersive sim + emergent quests are the point</span>
+      <span>Combat exists, but deferred</span>
+      <span>The world lives and breathes off-screen</span>
+      <span>Clean-room V20 spine</span>
+    </div>
+    <p>The roadmap (text/AI-DM \u2192 full town \u2192 2D \u2192 3D) is a <em>fidelity</em> ladder, not a <em>world-size</em> ladder. The world size is fixed at one town. That is the single most important constraint in this document, because it is what turns "account for anything" from a fantasy into a finite, solvable problem: thirteen people in one place, simulated deeply enough to react to any input.</p>
+
+    <h2 id="arch"><span class="nr">1</span>The Layered Architecture</h2>
+    <p>Greatsprings is a deterministic <strong>spine</strong> carrying immersive-sim <strong>flesh</strong>, read by an AI <strong>narrator</strong>, grown by a validated <strong>content</strong> layer. The 61-system map is the live inventory; this is the load order.</p>
+    <ol>
+      <li><strong>The Spine</strong> \u2014 state tree, applyEffect, registry, ID convention, hooks, turn loop, seeded RNG, save/replay. Deterministic. If this is wrong, everything above cracks.</li>
+      <li><strong>World Model</strong> \u2014 spaces + environment, portal travel, acoustics, weather, items, containers, vitals. The physical reality the fiction must obey.</li>
+      <li><strong>Character</strong> \u2014 SPECIAL, skills, traits, appearance, perks, conditions, progression, relics.</li>
+      <li><strong>Social</strong> \u2014 NPC schema, appraisal, bonds, faction reputation, witness, gossip diffusion, benefit gating, liveness. The thirteen, reacting.</li>
+      <li><strong>Quest &amp; Emergence</strong> \u2014 problems, discovery, the grounded generator, arbitration, encounters.</li>
+      <li><strong>Canon &amp; Integrity</strong> \u2014 canon, severance, dm_context, backlog.</li>
+      <li><strong>AI Dungeon Master</strong> \u2014 snapshot, contract, bridge, effect filter, canon guard, lore DB + injection, the authoring pipeline.</li>
+      <li><strong>Content &amp; Authoring</strong> \u2014 content-as-data packs. Definition of done: the town authored as pure data, zero engine code per NPC.</li>
+      <li><strong>UI</strong> \u2014 the Pip-Boy.</li>
+    </ol>
+    <p>The rule of the stack: <strong>a layer may only depend downward.</strong> The DM reads the spine; the spine never calls the DM. Content is data the spine loads; content never contains logic.</p>
+
+    <h2 id="boundary"><span class="nr">2</span>The Engine / DM Boundary \u2014 As Law</h2>
+    <p>This is the line that keeps a weak local model viable and the world consistent. It is Article II made concrete. The DM sees only what the engine shows it, and may only return three kinds of thing:</p>
+    <ul>
+      <li><strong>Narration</strong> \u2014 prose. Free. Constrained only by canon and <code>never</code>-rules in context.</li>
+      <li><strong>Classification</strong> \u2014 labels the engine asked for. "Doc's mood: offended." The engine converts the label to a number.</li>
+      <li><strong>Proposal</strong> \u2014 a request to author content (a quest, an assembled area, a reaction). Goes to the validator, never straight to state.</li>
+    </ul>
+    <div class="flow">\u2460 THE CONTROL LOOP<br><b>STATE</b> \u2192 snapshot \u2192 Ollama DM \u2192 {narration, classifications, proposals} \u2192 validator + filter \u2192 effects \u2192 <b>applyEffect</b> \u2192 STATE</div>
+    <p>The model proposes; the engine disposes. Every number the player ever sees was set by deterministic engine code. The model's only power over mechanics is to <em>suggest</em>, and every suggestion is checked. This is why genocide can't accidentally raise Doc's regard: the model never had the pen.</p>
+
+    <h2 id="generator"><span class="nr">3</span>The Grounded Generator <span class="dim">(working name: Relic Quests)</span></h2>
+    <p>This is the gem \u2014 the reason the project exists. An intelligence that, reading the live world and grounded in lore, proposes quests, rewards, and small areas that <em>make sense</em>, assembled from assets that already exist. Option B from the grilling, specified.</p>
+    <h3>It generates FROM state, not FOR scenarios</h3>
+    <p>There is no script anticipating what the player might do. The generator reads whatever world exists right now \u2014 the cast still alive, the problems detected, the assets present \u2014 and proposes from <em>that</em>. This is precisely why it can "account for anything": there is always <em>a</em> state to read, even a catastrophic one. It never needs a pre-written branch, because it writes the branch from the room it is standing in.</p>
+    <h3>The propose-and-validate pipeline</h3>
+    <ol>
+      <li><strong>Gather</strong> \u2014 the engine assembles grounded context: live problems, present cast, available assets, lore cards (3\u20136 keyword-matched), world bounds, the relic cooldown window.</li>
+      <li><strong>Propose</strong> \u2014 the intelligence returns a structured proposal: <code>{giver, premise, objective, reward, assets[]}</code>. It may only name assets that exist.</li>
+      <li><strong>Validate</strong> \u2014 every gate must pass, or the proposal dies silently:
+        <ul>
+          <li><strong>Schema</strong> \u2014 well-formed; every referenced id resolves. No invented assets.</li>
+          <li><strong>Canon Guard</strong> \u2014 violates no <code>never</code>-rule, contradicts no HARD canon entry.</li>
+          <li><strong>Lore</strong> \u2014 grounded in the lore DB; the premise and entities are valid New Vegas.</li>
+          <li><strong>Bounds</strong> \u2014 reward within caps (+5 skill / +120 XP); coordinates in-world; Reservation guard (no trespass on canon-reserved objective space).</li>
+          <li><strong>Reconciliation</strong> \u2014 reads live state; never re-resolves what's already done (no fighting the same geckos twice).</li>
+        </ul>
+      </li>
+      <li><strong>Commit</strong> \u2014 an accepted proposal is <em>lowered to a concrete sequence of effects and dynamic-content nodes</em>, applied through <code>applyEffect</code>, and logged. The instant it commits, it is data. The model is out of the loop.</li>
+    </ol>
+    <div class="callout"><span class="h">Why this is the god-killer</span><p>The generator is a brilliant improv actor who knows every rule and only touches props that are real and on the stage. It is powerful but it cannot invent from nothing, cannot contradict the record, cannot exceed its budget. That constraint is not a weakness \u2014 it is the only thing that keeps the world consistent across infinite player choices. Remove the validator and you have the god, and the god forgets and contradicts itself within an hour. That is the tofu-dreg. The validator is load-bearing.</p></div>
+
+    <h2 id="schema"><span class="nr">4</span>The Frozen State Schema</h2>
+    <p>One shape, versioned, frozen. The end of V15-vs-V19 drift. <strong>Content</strong> (authored definitions) lives in the registry and ships in packs; <strong>state</strong> (everything mutable) lives in the tree and is saved. AI-authored nodes land in <code>state.dynamicContent</code> so they save and replay like everything else.</p>
+<pre><span class="c">// \u2500\u2500 SAVE FILE \u2014 the unit of truth on disk \u2500\u2500</span>
+<span class="k">SaveFile</span> {
+  schemaVersion: <span class="s">"20.0"</span>      <span class="c">// bumps only on a breaking change</span>
+  contentPackVersion: string   <span class="c">// which authored packs to load</span>
+  seed: uint64                 <span class="c">// the world seed; all RNG derives from it</span>
+  savedAt: ISO8601             <span class="c">// metadata only \u2014 never read by logic</span>
+  state: State
+  effectLog: EffectLogEntry[]  <span class="c">// ordered, since checkpoint</span>
+}
+
+<span class="c">// \u2500\u2500 STATE \u2014 the single source of truth \u2500\u2500</span>
+<span class="k">State</span> {
+  meta:    { schemaVersion, turn:uint }
+  rng:     { seed:uint64, cursor:uint }        <span class="c">// seeded PRNG position</span>
+  world:   { day, minute:0..1439, weather, sky, hazard }
+  player:  PlayerState
+  npcs:    { [npcId]: NpcState }
+  factions:{ [factionId]: { standing:-100..100, state } }
+  spaces:  { [spaceId]: { status, envOverrides, searched } }
+  containers: { [id]: ContainerState }
+  problems:   { [id]: Problem }
+  relicQuest: { lastIssuedDay, active, issued[] }
+  severed: { [nodeId]: { turn, reason } }
+  dynamicContent: { spaces:{}, npcs:{}, items:{} }  <span class="c">// AI-authored, committed</span>
+  flags:   { [key]: value }
+}
+
+<span class="c">// \u2500\u2500 PLAYER \u2500\u2500</span>
+<span class="k">PlayerState</span> {
+  identity: { name, race, look, build, age }
+  body:     { hp, maxhp, rads }
+  needs:    { hunger, thirst, fatigue, heat, cold }   <span class="c">// 0..100</span>
+  wallet:   { caps }
+  progress: { level, xp, xpToNext }
+  baseSpecial: { STR,PER,END,CHA,INT,AGI,LCK }        <span class="c">// 1..10</span>
+  skills:   { [skill]: 0..100 }
+  traits: [id]   appearanceTraits: [id]   perks: [id]   relics: [{id,name}]
+  conditions: { [name]: { skillMods, specialMods, expiresTurn? } }
+  tempSkills: { [skill]: { delta, expiresDay } }
+  equipped:   { weapon:itemId|null, armor:itemId|null }
+  inventory:  { [itemId]: qty }
+  reputation: { [townId]: { fame:0..100, infamy:0..100, rumors:[] } }
+  knownProblems: { [problemId]: { via, how, day } }
+}
+
+<span class="c">// \u2500\u2500 NPC \u2014 static DEF (authored, in pack) vs STATE (runtime, saved) \u2500\u2500</span>
+<span class="k">NpcDef</span> {                <span class="c">// personality is AUTHORED, not simulated from nothing</span>
+  id, name, role, age, special:{S,P,E,C,I,A,L}
+  influence:0..100      <span class="c">// how far their opinion travels</span>
+  courage:0..100        <span class="c">// fight/flight, benefit thresholds</span>
+  stubbornness:0..100   <span class="c">// gossip resistance</span>
+  witnessRadius:int     repMult:float
+  essential:bool        houseControlled:bool        home:spaceId
+  bonds:    { [npcId]: 0..100 }                 <span class="c">// directed strength</span>
+  benefits: [ { id, requiresRegard:int } ]      <span class="c">// gated services</span>
+  dm_context: { always, conditional[], never[] }
+}
+<span class="k">NpcState</span> {
+  regard:-100..100   mood:string   location:spaceId   alive:bool
+  needs:{...}
+  memory:{ durable:[{tag,note,turn}], transient:[...] }
+  knowledge:[problemId]
+}
+
+<span class="c">// \u2500\u2500 SPACE \u2014 DEF (authored) vs STATE (runtime) \u2500\u2500</span>
+<span class="k">SpaceDef</span> {
+  id, name, region
+  mapRect:[x,y,w,h]               <span class="c">// schematic floor-plan (UI) \u2014 AUTHORED</span>
+  origin3d:[x,y,z], size3d:[w,d,h] <span class="c">// metres, for ACOUSTICS ONLY</span>
+  env:{ brightness, temperature, shelter, noise, rads }
+  dm_context:{ always, conditional[], never[] }
+}
+
+<span class="c">// \u2500\u2500 EFFECT \u2014 the atom of change. The ONLY thing that mutates State. \u2500\u2500</span>
+<span class="k">Effect</span> { type:string, ...fields }   <span class="c">// validated vs the effect registry</span>
+<span class="k">EffectLogEntry</span> { turn, effect, source:"engine"|"dm"|"player"|"system" }
+
+<span class="c">// \u2500\u2500 CANON \u2014 write-only history \u2500\u2500</span>
+<span class="k">CanonEntry</span> { id, lock:"HARD", kind, retell, turn }</pre>
+    <div class="callout"><span class="h">The mapRect decision, locked</span><p>A space carries <em>two</em> geometries and they are not the same thing. <code>origin3d/size3d</code> are metres, for the acoustic solver only. <code>mapRect</code> is an authored schematic floor-plan for the UI. The V19 map looked wrong because it drew the schematic from the acoustic coords. Never again: the floor-plan is authored, never derived.</p></div>
+
+    <h2 id="relationship"><span class="nr">5</span>The Relationship Model <span class="dim">(locked)</span></h2>
+    <p>Three axes, all signed <code>-100..+100</code>. This is frozen \u2014 the social web stands on it.</p>
+    <ul>
+      <li><strong>Regard</strong> \u2014 per-NPC, how one character feels about <em>you</em>. <code>NpcState.regard</code>.</li>
+      <li><strong>Reputation</strong> \u2014 per-town Fame and Infamy (each <code>0..100</code>), combined into a standing. How the <em>place</em> sees you.</li>
+      <li><strong>Faction Standing</strong> \u2014 signed, per faction. <code>state.factions[id].standing</code>.</li>
+    </ul>
+    <table>
+      <tr><th>Regard</th><th>Reads as</th><th>Town standing (Fame\u2212Infamy)</th><th>Reads as</th></tr>
+      <tr><td class="n">+60..+100</td><td>trusted ally</td><td class="n">Fame \u2265 45</td><td>Idolized</td></tr>
+      <tr><td class="n">+30..+59</td><td>friendly</td><td class="n">Fame \u2265 25</td><td>Liked</td></tr>
+      <tr><td class="n">+5..+29</td><td>warming</td><td class="n">Fame \u2265 10</td><td>Accepted</td></tr>
+      <tr><td class="n">\u221214..+4</td><td>neutral</td><td class="n">both low</td><td>Neutral</td></tr>
+      <tr><td class="n">\u221235..\u221215</td><td>cautious</td><td class="n">Infamy \u2265 10</td><td>Shunned</td></tr>
+      <tr><td class="n">\u221260..\u221236</td><td>unfriendly</td><td class="n">Infamy \u2265 25</td><td>Hated</td></tr>
+      <tr><td class="n">\u221280..\u221261</td><td>hostile</td><td class="n">Infamy \u2265 45</td><td>Vilified</td></tr>
+      <tr><td class="n">below \u221280</td><td>enemy</td><td class="n">Fame \u2265 30 &amp; Infamy \u2265 30</td><td>Mixed</td></tr>
+    </table>
+    <p>The engine owns every movement on these axes. The DM classifies a reaction; the engine maps it to a signed, capped delta (positive earnings capped per turn \u2014 the anti-glaze rule). Deeds witnessed by NPCs feed reputation through <code>repMult</code>; gossip diffuses regard across <code>bonds</code>. No number here is ever set by the model.</p>
+
+    <h2 id="save"><span class="nr">6</span>Save &amp; Replay \u2014 The Paradox, Dissolved</h2>
+    <p>The hard question: <em>how can a save replay if an AI keeps adding things to the world?</em> The answer is the spine's cleverest move, and it is simple once seen:</p>
+    <div class="creed" style="text-align:left"><div class="big" style="font-size:21px">The AI never enters the replay loop.<br>You replay its <span style="color:var(--pip)">commits</span>, not its <span style="color:var(--amber)">authorship</span>.</div></div>
+    <p>When the generator authors something, the result is frozen into concrete effects and dynamic-content nodes <em>the instant it commits</em> \u2014 checked against canon, then written to state and the log. From that moment it is data, exactly like a hand-authored asset. It is not "a thing the model did that we'd have to ask it to do again." It is a commit.</p>
+    <p>So a save is three things:</p>
+    <ol>
+      <li>the <strong>seed</strong>,</li>
+      <li>a <strong>state checkpoint</strong>,</li>
+      <li>the ordered <strong>effect log</strong> since that checkpoint \u2014 which already contains every AI-authored effect, now concrete.</li>
+    </ol>
+    <div class="flow">REPLAY = load packs @version \u2192 restore checkpoint \u2192 re-run effect log against the seeded engine. <b>The model is never re-prompted.</b></div>
+    <p>The model is nondeterministic; its <em>artifacts</em> are not, because they were logged. That is the whole trick.</p>
+    <div class="callout"><span class="h">The Determinism Tax \u2014 non-negotiable</span><p>This only holds if the engine is bit-for-bit deterministic. The price, as hard rules: every random call draws from <code>state.rng</code> (seeded), never <code>Math.random()</code>. Iteration over objects uses fixed, sorted key order. No <code>Date.now()</code> or wall-clock anywhere in logic. Float determinism watched (the Float32/Float64 class of bug that has bitten us before). Pay this tax and saves replay forever \u2014 even saves full of AI-authored content. Skip it and the dream is a lie.</p></div>
+
+    <h2 id="severance"><span class="nr">7</span>Severance = Consequence <span class="dim">(the nuke, walked through)</span></h2>
+    <p>"Account for any choice, even genocide" is answered not by a creative god but by the severance protocol producing a <em>remembered wasteland</em>. Here is exactly what happens when the player wipes out Goodsprings:</p>
+    <ol>
+      <li><strong>13 severances cascade.</strong> Each NPC is severed, not deleted: <code>alive=false</code>, a HARD canon entry written ("\u2026killed in the destruction of Goodsprings, day N"), every inbound bond flagged severed, grief propagation firing where bond strength &gt; 50 \u2014 though here the mourners die too, so grief mostly writes epitaphs.</li>
+      <li><strong>The social web collapses node by node</strong>, each collapse logged. Faction ties drop to <code>historical</code>; reputation is preserved, not erased \u2014 your <strong>Infamy maxes</strong>.</li>
+      <li><strong>dm_context prohibitions auto-inject</strong> on every severed node: "narrate in past tense only; do not present as alive." The DM is now structurally unable to pretend the town lives.</li>
+      <li><strong>The result is a documented wasteland with a history.</strong> The engine did not break. It produced a valid, consequential, <em>remembered</em> state.</li>
+      <li><strong>The generator reads the ruins.</strong> The cast is now "Powder Gangers picking the bones, a survivor in the hills" \u2014 and it proposes, if anything, from <em>that</em> sparse vocabulary. Sparse cast \u2192 sparse proposals \u2192 desolation. Correctly.</li>
+    </ol>
+    <div class="callout"><span class="h">A dead town is the right answer</span><p>"Account for any choice" does <em>not</em> mean "every choice spawns a mission." Manufacturing a chirpy questline out of the ashes to keep the player entertained would be <em>less</em> Fallout, not more. New Vegas itself answers genocide with a graveyard and a reputation, not a catering service. The honest outcome \u2014 a remembered wasteland that knows what you did \u2014 is the faithful one, and severance gives it to you for free. This is Article IV in the flesh.</p></div>
+
+    <h2 id="cast"><span class="nr">8</span>The Thirteen <span class="dim">(proposed roster \u2014 argue with it)</span></h2>
+    <p>The social web is plumbing until the town exists as data. Here is a proposed cast of 13, drawn from New Vegas canon and the roles your social sim already modelled. The personality columns are the <code>NpcDef</code> fields that drive gossip and reputation. Reflect on this hard \u2014 these thirteen <em>are</em> the simulation.</p>
+    <table class="roster">
+      <tr><th>NPC</th><th>Role</th><th>Function in the web</th></tr>
+      <tr><td>Doc Mitchell</td><td>physician</td><td>INT 9 \u2014 accurate correlator. Bond to Trudy 72. Essential until the intro completes.</td></tr>
+      <tr><td>Trudy</td><td>saloon owner</td><td>CHA 8, influence 90 \u2014 the town's loudest relay. Her regard colours everyone's read of you.</td></tr>
+      <tr><td>Sunny Smiles</td><td>wilderness guide</td><td>PER 8 / AGI 7 \u2014 earliest detection node. Tutorial quests. Paired with Cheyenne.</td></tr>
+      <tr><td>Cheyenne</td><td>Sunny's dog</td><td>Environmental sensor. Reacts to threats before humans do.</td></tr>
+      <tr><td>Easy Pete</td><td>prospector</td><td>Stubbornness 85 \u2014 gossip rarely reaches him unless Trudy carries it directly. Dynamite gate.</td></tr>
+      <tr><td>Chet</td><td>store owner</td><td>Courage 22 \u2014 lowest in town. Pulls his discount early and independently of town rep.</td></tr>
+      <tr><td>Ringo</td><td>Crimson Caravan survivor</td><td>Low influence \u2014 harming him barely swings rep. Ghost-town-gunfight trigger.</td></tr>
+      <tr><td>Victor</td><td>Securitron</td><td>Bypasses gossip \u2014 logs straight to Mr House. House-controlled, essential.</td></tr>
+      <tr><td>Joe Cobb</td><td>Powder Ganger</td><td>External threat node. Presence drops every GS NPC's effective courage.</td></tr>
+      <tr><td>Settler \u00d74</td><td>field / domestic / watch / handyman</td><td>Low-influence chorus. Carry gossip slowly, need a Trudy rally to fight, tie to the pump and the tutorial.</td></tr>
+    </table>
+    <p class="dim">That is 9 named + Cheyenne + 4 settlers = 14 nodes, one of which (Joe Cobb) is an external antagonist rather than a townsperson. Trim to your 13 by your own call \u2014 e.g. fold a settler, or count Cheyenne as Sunny's appendage. This is the first thing to settle in your days of reflection: <em>who, exactly, are the thirteen.</em></p>
+
+    <h2 id="order"><span class="nr">9</span>The Canonical Build Order</h2>
+    <p>Each step stands on the one below. The gem comes <em>last</em> because it needs all of it underneath. Build in any other order and you are faking the headline again.</p>
+    <ol>
+      <li><strong>Collapse to one engine, freeze this schema.</strong> Kill V16\u2013V19.1 as living lines. One spine; branch only content, never the engine. This ends the mess. <span class="dim">\u2190 you are here</span></li>
+      <li><strong>Seeded PRNG + effect-log saves.</strong> The determinism tax, paid. This is what makes "the AI adds things AND saves replay" <em>true</em> instead of a contradiction. Nothing authored can be trusted before this exists.</li>
+      <li><strong>The living town.</strong> The 13 as schema, gossip diffusion, real liveness (schedules, goals, off-screen ticks). This is the simulation you actually want \u2014 the thing that reacts to anything.</li>
+      <li><strong>Harden the generator.</strong> Lore inputs, asset-assembly, the canon guard, the full validate-and-commit pipeline. The gem, on a spine that can hold it.</li>
+      <li><strong>Combat.</strong> Last. A whole subsystem, deferred by your own decision, and nothing above depends on it.</li>
+    </ol>
+    <p>Why this order, in one line each: you can't trust authored content until saves are deterministic (1\u21922); the generator has nothing to read until the town lives (3 before 4); the gem needs lore + canon-guard + content-schema all present (4 needs 1\u20133); combat touches none of it (5 is independent and therefore last).</p>
+
+    <h2 id="open"><span class="nr">10</span>What This Document Deliberately Leaves Open</h2>
+    <p>A foundation says what is settled <em>and</em> what is not, so the boundaries are honest:</p>
+    <ul>
+      <li><strong>Combat depth and model</strong> \u2014 turn-based vs real-time vs narrative-dice. Deferred. Decided when step 5 arrives, not before.</li>
+      <li><strong>The lore DB's source and shape</strong> \u2014 how the NV corpus is structured and ingested. Specced at step 4.</li>
+      <li><strong>2D / 3D presentation</strong> \u2014 a fidelity question above this spine. The state tree is renderer-agnostic by design; a 3D client reads the same truth.</li>
+      <li><strong>The exact thirteen</strong> \u2014 the roster above is a proposal. Settle the cast.</li>
+      <li><strong>Liveness depth</strong> \u2014 full off-screen simulation vs scheduled routines vs lazy-on-visit. The spine supports any; pick the ambition at step 3.</li>
+    </ul>
+
+    <div class="foot">
+      GREATSPRINGS \u00b7 FOUNDATION DOCUMENT \u00b7 v1.0 \u00b7 the V20 clean-room spine.<br>
+      Read it for days. Mark it up. When a line no longer matches what you envision, that line changes here first \u2014 then the code. The document leads; the engine follows.
+    </div>
+  </main>
+</div>
+<script>
+/* nav active-section highlight */
+const links=[...document.querySelectorAll('#nav a')];
+const map={}; links.forEach(a=>{const id=a.getAttribute('href').slice(1);map[id]=a;});
+const obs=new IntersectionObserver(es=>{
+  es.forEach(e=>{ if(e.isIntersecting){ links.forEach(l=>l.classList.remove('on')); const a=map[e.target.id]; if(a)a.classList.add('on'); } });
+},{rootMargin:'-10% 0px -80% 0px',threshold:0});
+document.querySelectorAll('main section, main h2').forEach(el=>{ if(el.id) obs.observe(el); });
+</script>
+</body>
+</html>

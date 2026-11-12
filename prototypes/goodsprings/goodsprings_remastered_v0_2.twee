@@ -1,0 +1,408 @@
+:: StoryTitle
+Goodsprings Remastered — Prototype 0.2
+
+:: StoryData
+{
+  "ifid": "9F4A2C7E-1B3D-4E5A-8C6F-2D1A0B9E3C44",
+  "format": "SugarCube",
+  "format-version": "2.37.3",
+  "start": "Start",
+  "zoom": 1
+}
+
+:: StoryInit
+/% ===== Everything in your world is born here. Edit any number. ===== %/
+
+/% Identity %/
+<<set $name to "Courier">>
+<<set $background to "">>
+<<set $trait1 to "">>
+<<set $wildWasteland to false>>
+<<set $hasPipBoy to false>>
+<<set $level to 1>>
+
+/% S.P.E.C.I.A.L. %/
+<<set $str to 5>><<set $per to 5>><<set $end to 5>><<set $cha to 5>>
+<<set $int to 5>><<set $agi to 5>><<set $lck to 5>>
+
+/% Skills (the 13 NV skills) %/
+<<set $barter to 15>><<set $energy to 15>><<set $explosives to 15>><<set $guns to 15>>
+<<set $lockpick to 15>><<set $medicine to 15>><<set $melee to 15>><<set $repair to 15>>
+<<set $science to 15>><<set $sneak to 15>><<set $speech to 15>><<set $survival to 15>>
+<<set $unarmed to 15>>
+
+/% Apparel bonuses — added at the MOMENT of a check, never baked into base skills %/
+<<set $bonusSpeech to 0>>
+<<set $bonusGuns to 0>>
+
+/% Vitals & money. maxHealth is recomputed from Endurance in the Gear passage. %/
+<<set $maxHealth to 100>><<set $health to 100>>
+<<set $caps to 50>>
+<<set $stimpaks to 2>>
+<<set $inventory to []>>
+
+/% --- EQUIPMENT --- armor gives Damage Threshold (DT), NOT extra HP --- %/
+<<set $armorName to "Vault 21 Jumpsuit">>
+<<set $dt to 2>>
+<<set $hasLeatherArmor to false>>
+
+/% --- WEAPONS --- objects you can wield; $weaponX are the equipped stats used in combat %/
+<<set $weapons to [{name:"9mm Pistol", min:8, max:14, acc:25}]>>
+<<set $weaponName to "9mm Pistol">><<set $weaponMin to 8>><<set $weaponMax to 14>><<set $weaponAcc to 25>>
+
+/% --- LOOT TABLES --- add an item by copying a line. Repeat a line to make it more common. --- %/
+<<set $weaponTable to [{name:"Varmint Rifle", min:7, max:12, acc:30}, {name:".357 Magnum Revolver", min:10, max:18, acc:20}, {name:"9mm SMG", min:6, max:11, acc:15}, {name:"Single Shotgun", min:14, max:22, acc:10}, {name:"Switchblade", min:5, max:9, acc:35}, {name:"Switchblade", min:5, max:9, acc:35}]>>
+<<set $skillBookTable to [{title:"Guns and Bullets", skill:"Guns", var:"guns"}, {title:"Meeting People", skill:"Speech", var:"speech"}, {title:"Wasteland Survival Guide", skill:"Survival", var:"survival"}, {title:"Big Book of Science", skill:"Science", var:"science"}]>>
+<<set $skillBooks to []>>
+
+/% World clock — the time-dynamic engine %/
+<<set $day to 1>><<set $partOfDay to "Morning">>
+
+/% Faction reputation: Fame and Infamy tracked separately, like NV. %/
+<<set $pgFame to 0>><<set $pgInfamy to 0>>
+<<set $gsFame to 0>><<set $gsInfamy to 0>>
+<<set $ncrFame to 0>><<set $ncrInfamy to 0>>
+
+/% Quest & world flags %/
+<<set $ringoResolved to false>><<set $ringoGone to false>>
+<<set $houseLooted to false>><<set $sunnyTutorialDone to false>>
+<<set $foundMsg to "">><<set $combatMsg to "">>
+
+/% Enemy slots (filled when a fight starts) %/
+<<set $enemyName to "">><<set $enemyHP to 0>><<set $enemyMaxHP to 0>>
+<<set $enemyDT to 0>><<set $enemyMin to 0>><<set $enemyMax to 0>>
+
+
+:: Widgets [widget]
+<<widget "hud">>\
+''— STATUS —''
+Day $day · $partOfDay
+HP $health/$maxHealth · DT $dt · Caps $caps · Stimpaks $stimpaks
+Powder Gangers: Fame $pgFame / Infamy $pgInfamy
+Goodsprings: Fame $gsFame / Infamy $gsInfamy
+NCR: Fame $ncrFame / Infamy $ncrInfamy
+----------------------------------------
+<</widget>>
+
+
+:: Start
+You wake to a low wooden ceiling and the smell of antiseptic. A kindly, tired-looking man leans over you.
+
+"Easy now. You've been out a few days. Took two rounds to the head — you're lucky to be breathing." He offers a hand. "Name's Doc Mitchell. Goodsprings. Mind telling me your name?"
+
+[[Tell him your name->Name]]
+
+
+:: Name
+<<textbox "$name" $name>>
+
+[[Continue->VitOMatic]]
+
+
+:: VitOMatic
+"Well, $name, let's see what we're workin' with." Doc Mitchell wheels over the Vit-o-Matic Vigor Tester. "Pick whichever feels most like you."
+
+<<link "Ex-NCR Trooper — tough, steady with a rifle">>\
+  <<set $background to "Ex-NCR Trooper">><<set $end to 7>><<set $str to 6>>
+  <<set $guns to 45>><<set $survival to 35>><<set $ncrFame to $ncrFame + 5>>
+  <<goto "Specialty">>
+<</link>>
+<<link "Vault Tinkerer — clever hands, book-smart">>\
+  <<set $background to "Vault Tinkerer">><<set $int to 7>><<set $per to 6>>
+  <<set $science to 45>><<set $repair to 40>><<set $medicine to 35>>
+  <<goto "Specialty">>
+<</link>>
+<<link "Wasteland Drifter — quick, quiet, persuasive">>\
+  <<set $background to "Wasteland Drifter">><<set $agi to 7>><<set $lck to 6>>
+  <<set $sneak to 45>><<set $speech to 40>><<set $barter to 35>>
+  <<goto "Specialty">>
+<</link>>
+
+
+:: Specialty
+"And if you had to name one thing you're truly good at?"
+
+<<link "Guns">><<set $guns to $guns + 15>><<goto "Trait">><</link>>
+<<link "Speech">><<set $speech to $speech + 15>><<goto "Trait">><</link>>
+<<link "Sneak">><<set $sneak to $sneak + 15>><<goto "Trait">><</link>>
+<<link "Survival">><<set $survival to $survival + 15>><<goto "Trait">><</link>>
+<<link "Explosives">><<set $explosives to $explosives + 15>><<goto "Trait">><</link>>
+
+
+:: Trait
+Doc flips through some inkblots. "Last thing — pick a quirk."
+
+<<link "Good Natured (+Speech, +Medicine; -Guns)">>\
+  <<set $trait1 to "Good Natured">><<set $speech to $speech + 5>><<set $medicine to $medicine + 5>><<set $guns to $guns - 5>>
+  <<goto "Gear">>
+<</link>>
+<<link "Fast Shot (+Guns; -Speech)">>\
+  <<set $trait1 to "Fast Shot">><<set $guns to $guns + 10>><<set $speech to $speech - 5>>
+  <<goto "Gear">>
+<</link>>
+<<link "Wild Wasteland (the Mojave gets... strange)">>\
+  <<set $trait1 to "Wild Wasteland">><<set $wildWasteland to true>>
+  <<goto "Gear">>
+<</link>>
+
+
+:: Gear
+/% HP is derived from Endurance here, now that stats are final. Armor does NOT touch this. %/
+<<set $maxHealth to 100 + ($end - 5) * 10>>
+<<set $health to $maxHealth>>
+<<run $inventory.push("Vault 21 Jumpsuit")>>
+
+Doc straps a Pip-Boy 3000 to your wrist and presses a few caps and a pistol into your hands. "Sunny Smiles is out by the saloon — she'll show you which end points away from you."
+
+<<set $hasPipBoy to true>>
+You step out into the dusty light of Goodsprings.
+
+[[Step outside->Goodsprings]]
+
+
+:: Goodsprings
+<<hud>>
+You're on the main road of Goodsprings. The Prospector Saloon and Chet's store sit up to the north, an abandoned gas station hunches off to the west, and the schoolhouse and Victor's shack lie south.<<if $wildWasteland>> Somewhere behind the saloon, a man in a checkered suit is dancing very slowly. You decide not to ask.<</if>>
+
+<<if $ringoGone>>The gas station looks empty now — whatever sheltered there is long gone.<<else>>Word is a Crimson Caravan man is holed up in that gas station, and the Powder Gangers want him dead.<</if>>
+
+What now?
+
+[[Prospector Saloon (north)->Saloon]]
+[[Chet's General Store (north)->Store]]
+[[Abandoned gas station (west)->GasStation]]
+[[Find Sunny at the well->Well]]
+[[Search an abandoned house->AbandonedHouse]]
+[[Check your gear->GearScreen]]
+
+<<link "Rest until the next day">>
+  <<set $day to $day + 1>>
+  <<if $day gte 7 and not $ringoResolved and not $ringoGone>>
+    <<set $ringoGone to true>>
+  <</if>>
+  <<goto "Goodsprings">>
+<</link>>
+
+
+:: Well
+<<hud>>
+<<if $sunnyTutorialDone>>
+The well's quiet now. Sunny's gone back to the saloon.
+[[Back to the road->Goodsprings]]
+<<else>>
+Sunny Smiles leads you to the old well at the edge of town, Cheyenne padding alongside. "Mojave's full of things that bite. Start with that gecko down there. Take your time, line up your shot."
+<<link "Take aim and fight the gecko">>
+  <<set $enemyName to "Gecko">><<set $enemyHP to 25>><<set $enemyMaxHP to 25>>
+  <<set $enemyDT to 0>><<set $enemyMin to 4>><<set $enemyMax to 8>>
+  <<set $combatMsg to "">>
+  <<goto "Combat">>
+<</link>>
+[[Not yet->Goodsprings]]
+<</if>>
+
+
+:: Combat
+<<hud>>
+''COMBAT — vs $enemyName''
+Enemy HP: $enemyHP / $enemyMaxHP
+Weapon: $weaponName (dmg $weaponMin–$weaponMax)
+<<if $combatMsg isnot "">>
+
+$combatMsg
+<</if>>
+
+<<link `"Attack with " + $weaponName`>>
+  <<set _hit to Math.min($guns + $bonusGuns + $weaponAcc, 95)>>
+  <<if random(1,100) lte _hit>>
+    <<set _dmg to random($weaponMin, $weaponMax) - $enemyDT>>
+    <<if _dmg lt 1>><<set _dmg to 1>><</if>>
+    <<set $enemyHP to $enemyHP - _dmg>>
+    <<set $combatMsg to "You hit the " + $enemyName + " for " + _dmg + " damage.">>
+  <<else>>
+    <<set $combatMsg to "You miss.">>
+  <</if>>
+  <<if $enemyHP lte 0>>
+    <<goto "CombatWin">>
+  <<else>>
+    <<set _edmg to random($enemyMin, $enemyMax) - $dt>>
+    <<if _edmg lt 1>><<set _edmg to 1>><</if>>
+    <<set $health to $health - _edmg>>
+    <<set $combatMsg to $combatMsg + " The " + $enemyName + " strikes back for " + _edmg + ".">>
+    <<if $health lte 0>><<goto "CombatLose">><<else>><<goto "Combat">><</if>>
+  <</if>>
+<</link>>
+
+<<if $stimpaks gt 0>>
+<<link "Use a Stimpak (+30 HP)">>
+  <<set $stimpaks to $stimpaks - 1>>
+  <<set $health to Math.min($health + 30, $maxHealth)>>
+  <<set _edmg to random($enemyMin, $enemyMax) - $dt>>
+  <<if _edmg lt 1>><<set _edmg to 1>><</if>>
+  <<set $health to $health - _edmg>>
+  <<set $combatMsg to "You jab a Stimpak (+30). The " + $enemyName + " hits you for " + _edmg + ".">>
+  <<if $health lte 0>><<goto "CombatLose">><<else>><<goto "Combat">><</if>>
+<</link>>
+<</if>>
+
+<<link "Flee">>
+  <<if random(1,10) lte $agi>>
+    <<set $combatMsg to "">><<goto "Goodsprings">>
+  <<else>>
+    <<set _edmg to random($enemyMin, $enemyMax) - $dt>>
+    <<if _edmg lt 1>><<set _edmg to 1>><</if>>
+    <<set $health to $health - _edmg>>
+    <<set $combatMsg to "You stumble fleeing and take " + _edmg + ".">>
+    <<if $health lte 0>><<goto "CombatLose">><<else>><<goto "Combat">><</if>>
+  <</if>>
+<</link>>
+
+
+:: CombatWin
+<<hud>>
+The $enemyName drops. Sunny gives an approving nod. "Not bad. You'll do."
+<<set $combatMsg to "">>
+<<run $inventory.push("Gecko Hide")>>
+<<set $sunnyTutorialDone to true>>
+[[Back to the road->Goodsprings]]
+
+
+:: CombatLose
+<<hud>>
+Everything goes black... You come to back at Doc Mitchell's, patched up but lighter a few caps.
+<<set $health to Math.floor($maxHealth / 2)>>
+<<set $caps to Math.max($caps - 10, 0)>>
+<<set $combatMsg to "">>
+[[Back to the road->Goodsprings]]
+
+
+:: AbandonedHouse
+<<hud>>
+<<if $houseLooted>>
+You've already picked this place clean.
+[[Back to the road->Goodsprings]]
+<<else>>
+Dust, a collapsed cot, and a locked footlocker in the corner.
+<<link "Force the footlocker">>
+  <<set $houseLooted to true>>
+  <<set _w to either($weaponTable)>>
+  <<run $weapons.push(_w)>>
+  <<set $foundMsg to "You pry it open and find a " + _w.name + ".">>
+  <<if random(1,100) lte 35>>
+    <<set $hasLeatherArmor to true>>
+    <<set $foundMsg to $foundMsg + " Underneath, a set of Leather Armor.">>
+  <</if>>
+  <<if random(1,100) lte 45>>
+    <<set _b to either($skillBookTable)>>
+    <<run $skillBooks.push(_b)>>
+    <<set $foundMsg to $foundMsg + " And a dog-eared copy of '" + _b.title + "'.">>
+  <</if>>
+  <<goto "Loot">>
+<</link>>
+[[Leave it->Goodsprings]]
+<</if>>
+
+
+:: Loot
+<<hud>>
+$foundMsg
+[[Check your gear->GearScreen]]
+[[Back to the road->Goodsprings]]
+
+
+:: GearScreen
+<<hud>>
+''GEAR''
+Weapon: $weaponName (dmg $weaponMin–$weaponMax, acc +$weaponAcc)
+Armor: $armorName (DT $dt)
+
+''Weapons carried — click to wield:''
+<<for _i, _wp range $weapons>>
+<<capture _wp>>
+<<link `"Wield " + _wp.name`>>
+  <<set $weaponName to _wp.name>><<set $weaponMin to _wp.min>><<set $weaponMax to _wp.max>><<set $weaponAcc to _wp.acc>>
+  <<goto "GearScreen">>
+<</link>>
+<</capture>>
+<</for>>
+
+''Armor — click to wear:''
+<<link "Vault 21 Jumpsuit (DT 2)">><<set $armorName to "Vault 21 Jumpsuit">><<set $dt to 2>><<goto "GearScreen">><</link>>
+<<if $hasLeatherArmor>>
+<<link "Leather Armor (DT 6)">><<set $armorName to "Leather Armor">><<set $dt to 6>><<goto "GearScreen">><</link>>
+<</if>>
+
+<<if $skillBooks.length gt 0>>
+''Skill books — read for +3 (permanent):''
+<<for _j, _bk range $skillBooks>>
+<<capture _bk, _j>>
+<<link `"Read '" + _bk.title + "' (+3 " + _bk.skill + ")"`>>
+  <<run State.variables[_bk.var] = Math.min(State.variables[_bk.var] + 3, 100)>>
+  <<run $skillBooks.deleteAt(_j)>>
+  <<set $foundMsg to "You study '" + _bk.title + "'. " + _bk.skill + " +3.">>
+  <<goto "GearScreen">>
+<</link>>
+<</capture>>
+<</for>>
+<</if>>
+
+[[Back to the road->Goodsprings]]
+
+
+:: Saloon
+<<hud>>
+Trudy is wiping down the bar. Sunny Smiles nods from a corner table, Cheyenne at her feet.
+/% STUB — Milestone 1: Trudy's read on the threat; this is also where the gunfight rallies. %/
+[[Back to the road->Goodsprings]]
+
+
+:: Store
+<<hud>>
+Chet looks up. "Need somethin'? Or are you here about the trouble that's comin'?"
+/% STUB — a Barter/Speech check here unlocks supplies, e.g. <<if $barter + $bonusSpeech gte 30>>. %/
+[[Back to the road->Goodsprings]]
+
+
+:: GasStation
+<<hud>>
+<<if $ringoGone>>
+Empty. Bottle caps and a cold campfire are all that's left.
+[[Back to the road->Goodsprings]]
+<<else>>
+A nervous man in a caravan duster lowers his pistol when he sees you're not a Powder Ganger. "Name's Ringo. If you're here to help, I won't say no."
+<<link "Agree to help defend Ringo">>
+  <<set $ringoResolved to true>>
+  <<set $gsFame to $gsFame + 15>><<set $pgInfamy to $pgInfamy + 15>>
+  <<goto "GunfightWon">>
+<</link>>
+[[Not yet — head back->Goodsprings]]
+<</if>>
+
+
+:: GunfightWon
+<<hud>>
+Word spreads: you stood with Goodsprings. The Powder Gangers won't forget it.
+/% STUB — Milestone 1 makes the gunfight itself a real fight on the combat system,
+   with Easy Pete's dynamite and Chet's supplies tilting the odds. Joe Cobb would be
+   an enemy with higher HP/DT than the gecko — same Combat passage, bigger numbers. %/
+[[Back to the road->Goodsprings]]
+
+
+:: README
+/% ===================== READ ME (not part of the game) =====================
+   WHAT'S NEW IN 0.2:
+   - HP comes from Endurance (set in the Gear passage). Armor does NOT add HP.
+   - Armor = Damage Threshold ($dt), subtracted from every hit you take.
+   - Footlocker in "Abandoned House" rolls a weapon (+ chance of armor + a skill book).
+   - Combat passage: Attack / Stimpak / Flee, turn-based, using your weapon & DT.
+   - Skill books raise a skill +3 permanently when read in the Gear screen.
+
+   HOW TO ADD A WEAPON: copy a line inside $weaponTable in StoryInit. Repeat a line
+   to make that item more common (that's how rarity weighting works — no math needed).
+
+   HOW SKILL CHECKS SHOULD LOOK: <<if $speech + $bonusSpeech gte 30>> ... <</if>>
+   (always add the apparel bonus so equipped clothing matters).
+
+   NEXT (the big one): wire the Ghost Town Gunfight onto the Combat passage —
+   Joe Cobb as a tougher enemy, with town allies improving your odds.
+   ========================================================================= %/
+This file is a starting point. Open any passage to edit it.

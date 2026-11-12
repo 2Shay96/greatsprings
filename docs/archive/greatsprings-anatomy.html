@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>GREATSPRINGS — Anatomy of the Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pip:#46e878;--bright:#b6ffd2;--dim:#2a8a52;--faint:#123a24;--bg:#03100a;--bg2:#061a10;--panel:#082315;
+  --bone:#e8f5ee;--organ:#ffb259;--neural:#5fd9ff;--mind:#c08bff;--genome:#7dffae;--red:#ff6a5e;
+  --mono:'Share Tech Mono',monospace;--crt:'VT323',var(--mono)}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:#cfeede;font-family:var(--mono);overflow:hidden}
+.scan{position:fixed;inset:0;pointer-events:none;z-index:60;background:repeating-linear-gradient(0deg,rgba(0,0,0,.12) 0 1px,transparent 1px 3px);opacity:.4}
+#wrap{height:100%;display:grid;grid-template-columns:1fr 340px;gap:0}
+#stagewrap{display:flex;flex-direction:column;min-width:0;min-height:0}
+#head{padding:12px 18px 6px}
+#head h1{font-family:var(--crt);font-size:27px;color:var(--bright);letter-spacing:1px;margin:0;text-shadow:0 0 12px rgba(70,232,120,.3)}
+#head p{margin:3px 0 0;font-size:12.5px;color:var(--dim);line-height:1.5;max-width:760px}
+#head b{color:var(--bone)}
+#stage{flex:1;min-height:0;padding:0 8px 10px}
+svg{width:100%;height:100%;display:block}
+.reg{cursor:pointer}
+.reg *{transition:opacity .15s}
+.reg:hover .hl{opacity:1}
+.lbl{font-family:var(--crt);letter-spacing:1px;pointer-events:none}
+.cap{font-family:var(--mono);pointer-events:none}
+.sel-ring{opacity:0}
+.reg.on .sel-ring{opacity:1}
+#side{border-left:1px solid var(--faint);background:var(--panel);overflow:auto;padding:16px 16px 30px}
+#side .badge{display:inline-block;font-family:var(--crt);font-size:13px;letter-spacing:1px;padding:2px 8px;border:1px solid;margin-bottom:8px}
+#side h2{font-family:var(--crt);font-size:25px;margin:0;color:var(--bright);line-height:1.05}
+#side .sub{color:var(--dim);font-size:12.5px;margin:2px 0 14px}
+#side h3{font-family:var(--crt);font-size:15px;color:var(--organ);letter-spacing:1px;margin:16px 0 5px}
+#side .analogy{font-size:14px;line-height:1.6;color:#d7f3e2}
+#side .eng{font-size:13px;line-height:1.55;color:var(--neural);border-left:2px solid var(--neural);padding-left:9px;margin-top:6px}
+#side ul{margin:6px 0 0;padding-left:0;list-style:none}
+#side li{font-size:12.5px;padding:3px 0;border-bottom:1px solid var(--faint);color:#cfeede}
+#side li::before{content:"▸ ";color:var(--dim)}
+#side .hint{color:var(--dim);font-size:12px;font-style:italic}
+.legend{display:flex;gap:12px;flex-wrap:wrap;padding:0 18px 10px;font-size:11px;color:var(--dim)}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;vertical-align:middle;margin-right:4px}
+@media(max-width:780px){#wrap{grid-template-columns:1fr}#side{display:none}}
+</style>
+</head>
+<body>
+<div class="scan"></div>
+<div id="wrap">
+  <div id="stagewrap">
+    <div id="head">
+      <h1>ANATOMY OF THE ENGINE</h1>
+      <p>Greatsprings is a living body: a deterministic <b>skeleton</b> carrying autonomic <b>organs</b>, wired by a <b>connectome</b> — micro inside each mind, macro between them — voiced by a <b>cortex</b> that can speak but never seize the controls. Click any part.</p>
+    </div>
+    <div class="legend">
+      <span><i style="background:var(--bone)"></i>spine / skeleton</span>
+      <span><i style="background:var(--organ)"></i>autonomic organs</span>
+      <span><i style="background:var(--neural)"></i>connectome (wiring)</span>
+      <span><i style="background:var(--mind)"></i>cortex (LLM)</span>
+      <span><i style="background:var(--genome)"></i>genome (content)</span>
+    </div>
+    <div id="stage">
+      <svg id="svg" viewBox="0 0 940 660" xmlns="http://www.w3.org/2000/svg">
+        <!-- senses / circulation flows -->
+        <defs>
+          <marker id="ar" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5fd9ff"/></marker>
+          <marker id="ara" markerWidth="9" markerHeight="9" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#ffb259"/></marker>
+        </defs>
+        <g class="reg" data-k="senses">
+          <path class="hl" d="M120,520 L120,150" stroke="#5fd9ff" stroke-width="1.4" fill="none" stroke-dasharray="4 4" marker-end="url(#ar)" opacity=".5"/>
+          <text class="cap" x="124" y="340" fill="#5fd9ff" font-size="10" transform="rotate(-90 124 340)">SENSES ↑ snapshot</text>
+        </g>
+        <g class="reg" data-k="membrane">
+          <path class="hl" d="M820,150 L820,520" stroke="#ffb259" stroke-width="1.4" fill="none" stroke-dasharray="4 4" marker-end="url(#ara)" opacity=".5"/>
+          <text class="cap" x="836" y="340" fill="#ffb259" font-size="10" transform="rotate(90 836 340)">CIRCULATION ↓ proposals → filter → applyEffect</text>
+        </g>
+
+        <!-- CORTEX -->
+        <g class="reg" data-k="cortex">
+          <ellipse class="sel-ring" cx="470" cy="66" rx="182" ry="54" fill="none" stroke="var(--mind)" stroke-width="2"/>
+          <ellipse class="hl" cx="470" cy="66" rx="170" ry="46" fill="rgba(192,139,255,.10)" stroke="var(--mind)" stroke-width="1.6" opacity=".9"/>
+          <path d="M340,66 q40,-30 80,0 q40,-30 90,0 q40,-26 80,0" fill="none" stroke="var(--mind)" stroke-width="1.4" opacity=".7"/>
+          <path d="M345,80 q45,28 90,0 q45,28 90,0" fill="none" stroke="var(--mind)" stroke-width="1.2" opacity=".5"/>
+          <text class="lbl" x="470" y="60" fill="var(--mind)" font-size="20" text-anchor="middle">THE VOICE · CORTEX</text>
+          <text class="cap" x="470" y="80" fill="var(--dim)" font-size="11" text-anchor="middle">the LLM — narrates, proposes</text>
+        </g>
+
+        <!-- MEMBRANE line -->
+        <g class="reg" data-k="membrane">
+          <line x1="60" y1="128" x2="880" y2="128" stroke="var(--organ)" stroke-width="1.4" stroke-dasharray="7 5" opacity=".75"/>
+          <text class="cap" x="470" y="143" fill="var(--organ)" font-size="11" text-anchor="middle">MEMBRANE · Article II — thought passes out as words; control never passes in</text>
+        </g>
+
+        <!-- SPINE -->
+        <g class="reg" data-k="spine">
+          <rect class="sel-ring" x="438" y="150" width="64" height="398" rx="14" fill="none" stroke="var(--bone)" stroke-width="2"/>
+          <rect class="hl" x="448" y="155" width="44" height="388" rx="12" fill="rgba(232,245,238,.10)" stroke="var(--bone)" stroke-width="1.6"/>
+          <g stroke="var(--bone)" stroke-width="1" opacity=".55">
+            <line x1="452" y1="195" x2="488" y2="195"/><line x1="452" y1="235" x2="488" y2="235"/>
+            <line x1="452" y1="275" x2="488" y2="275"/><line x1="452" y1="315" x2="488" y2="315"/>
+            <line x1="452" y1="355" x2="488" y2="355"/><line x1="452" y1="395" x2="488" y2="395"/>
+            <line x1="452" y1="435" x2="488" y2="435"/><line x1="452" y1="475" x2="488" y2="475"/><line x1="452" y1="515" x2="488" y2="515"/>
+          </g>
+          <text class="lbl" x="470" y="350" fill="var(--bone)" font-size="17" text-anchor="middle" transform="rotate(-90 470 350)">THE SPINE</text>
+        </g>
+
+        <!-- ORGANS (left) -->
+        <g class="reg" data-k="organs">
+          <g stroke="var(--organ)" stroke-width="1.1" opacity=".5">
+            <line x1="448" y1="210" x2="262" y2="210"/><line x1="448" y1="300" x2="236" y2="300"/>
+            <line x1="448" y1="392" x2="258" y2="392"/><line x1="448" y1="478" x2="276" y2="478"/>
+          </g>
+          <g fill="rgba(255,178,89,.10)" stroke="var(--organ)" stroke-width="1.5">
+            <ellipse class="hl" cx="198" cy="210" rx="66" ry="34"/>
+            <ellipse class="hl" cx="172" cy="300" rx="62" ry="32"/>
+            <ellipse class="hl" cx="194" cy="392" rx="64" ry="33"/>
+            <ellipse class="hl" cx="214" cy="478" rx="62" ry="32"/>
+          </g>
+          <g class="cap" fill="var(--organ)" font-size="12" text-anchor="middle">
+            <text x="198" y="214">THERMAL</text><text x="172" y="304">ACOUSTIC</text>
+            <text x="194" y="396">VITALS</text><text x="214" y="482">WEATHER</text>
+          </g>
+          <text class="lbl" x="150" y="150" fill="var(--organ)" font-size="15">AUTONOMIC ORGANS</text>
+          <rect class="sel-ring" x="100" y="168" width="170" height="346" rx="16" fill="none" stroke="var(--organ)" stroke-width="2"/>
+        </g>
+
+        <!-- CANON strand (right of spine) -->
+        <g class="reg" data-k="canon">
+          <path class="hl" d="M512,158 q14,40 0,80 q-14,40 0,80 q14,40 0,80 q-14,40 0,80 q14,30 0,60" fill="none" stroke="var(--pip)" stroke-width="1.5" opacity=".7"/>
+          <g stroke="var(--red)" stroke-width="1.4" opacity=".6">
+            <line x1="506" y1="230" x2="520" y2="226"/><line x1="506" y1="330" x2="520" y2="326"/><line x1="506" y1="430" x2="520" y2="426"/>
+          </g>
+          <text class="lbl" x="520" y="540" fill="var(--pip)" font-size="13">CANON · scars</text>
+        </g>
+
+        <!-- CONNECTOME network injected here -->
+        <g id="net"></g>
+
+        <!-- GENOME helix (bottom) -->
+        <g class="reg" data-k="genome">
+          <g stroke="var(--genome)" stroke-width="1.6" fill="none" opacity=".85">
+            <path class="hl" d="M405,560 q35,22 70,0 q35,-22 70,0 q35,22 70,0"/>
+            <path class="hl" d="M405,600 q35,-22 70,0 q35,22 70,0 q35,-22 70,0"/>
+          </g>
+          <g stroke="var(--genome)" stroke-width="1" opacity=".5">
+            <line x1="423" y1="566" x2="423" y2="594"/><line x1="475" y1="572" x2="475" y2="588"/>
+            <line x1="527" y1="566" x2="527" y2="594"/><line x1="579" y1="572" x2="579" y2="588"/><line x1="615" y1="566" x2="615" y2="594"/>
+          </g>
+          <text class="lbl" x="470" y="632" fill="var(--genome)" font-size="14" text-anchor="middle">GENOME · authored content</text>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div id="side"><div id="panel"></div></div>
+</div>
+
+<script>
+const REGIONS={
+  intro:{ c:"--bright", badge:"THE ORGANISM", title:"A LIVING BODY", sub:"the whole analogy, one breath",
+    analogy:"Greatsprings is built like an organism. A rigid <b>skeleton</b> (the Spine) holds it up and never improvises. <b>Autonomic organs</b> (the sim) sweat, hear, and hunger by reflex. A <b>connectome</b> wires it for thought \u2014 micro inside each mind, macro between them. A <b>cortex</b> (the LLM) dreams and speaks but cannot reach past the membrane to set its own heartbeat. And it all grows from a <b>genome</b> of authored lore it expresses and writes back to.",
+    eng:"Every system you've built has an organ. Click one to see where it lives.", sys:[] },
+  cortex:{ c:"--mind", badge:"CORTEX", title:"THE VOICE", sub:"the LLM \u2014 AI DM + per-NPC agents",
+    analogy:"The conscious, improvising mind. It dreams up speech and proposes new content. But like any brain in any body, it cannot reach down and set its own heartbeat \u2014 it can only think, speak, and suggest.",
+    eng:"Narration + classification + proposals ONLY. It never sets a number. Whatever it emits is a suggestion until the body validates it.",
+    sys:["AI Dungeon Master","Per-NPC agents (Bonesaw)","Mood / reaction classification","Content proposals (the grounded author)"] },
+  membrane:{ c:"--organ", badge:"MEMBRANE", title:"ARTICLE II", sub:"the engine / DM boundary",
+    analogy:"The blood\u2013brain barrier. Thought passes one way \u2014 outward, as words and proposals. Control never passes inward. The cortex proposes; the spine disposes. This is the wall that kept a punch from raising Doc's regard.",
+    eng:"Effect filter + validator + canon guard. Mechanics emitted by the model are rejected here. SENSES (the snapshot) cross outward to the cortex; CIRCULATION carries proposals back through the filter into applyEffect.",
+    sys:["Effect filter (DM_ALLOWED)","Proposal validator","Canon guard","Violence guard","Snapshot (senses)"] },
+  micro:{ c:"--neural", badge:"MICRO-CONNECTOME", title:"ONE MIND", sub:"a single NPC's internal wiring",
+    analogy:"The neurons and synapses inside one skull. Say 'Stalk' and the right memory fires; give caps and a new synapse forms. This is what makes Bonesaw feel like a <i>someone</i>, not a chatbot \u2014 relentless internal consistency, assembled fresh every moment.",
+    eng:"Persona + flash-card memory + knowledge gate + retrieval + per-NPC regard, composed into the bound model's context each turn. The engine's truth (health, regard) is injected so the mind can't contradict its own body.",
+    sys:["Persona (authored soul)","Flash-card memory","Knowledge gate","Retrieval (keyword + recency)","Short-term buffer","Per-NPC regard"] },
+  macro:{ c:"--neural", badge:"MACRO-CONNECTOME", title:"THE TOWN", sub:"the wiring between minds",
+    analogy:"The white matter that binds 13 brains into one social organism. A deed Trudy witnesses travels her synapses to Doc \u2014 and he brings it up unprompted, because the signal reached him, not because a god decided it. This is the layer that makes the town <i>react</i> to anything.",
+    eng:"Directed bonds + gossip diffusion + witness model + faction & town reputation. It decides WHO KNOWS WHAT \u2014 and what it decides becomes the input to each mind's micro-connectome.",
+    sys:["Bonds (directed synapses)","Gossip diffusion","Witness model","Faction reputation","Town Fame / Infamy"] },
+  spine:{ c:"--bone", badge:"SKELETON", title:"THE SPINE", sub:"the deterministic core",
+    analogy:"Rigid, load-bearing, and utterly without imagination \u2014 which is precisely its job. Everything hangs off it; it never improvises. Break a bone here and the whole body fails, so it's the one thing that must be frozen and certified first.",
+    eng:"One state tree, one mutation path (applyEffect), the turn clock, seeded RNG, save/replay. Truth lives here and nowhere else. The effect log is the heartbeat \u2014 replay it and the body lives the exact same life again.",
+    sys:["State tree (single truth)","applyEffect (one door)","Registry + ID convention","Turn loop / engine-owned time","Seeded PRNG","Save & replay (effect log)"] },
+  organs:{ c:"--organ", badge:"AUTONOMIC", title:"THE ORGANS", sub:"the immersive-sim systems",
+    analogy:"Reflex and metabolism. The body sweats, hears, hungers, and weathers the storm with no conscious thought at all. Blast Doc with the hairdryer and HE sweats <i>here</i> \u2014 the cortex never decided it, it only narrated it afterward. This is where the sim magic composes.",
+    eng:"Deterministic physical simulation ticking on the spine's clock. Systems stack without glue: one act fires thermal AND social at once, because each organ just reads the shared body-state.",
+    sys:["Thermoregulation (thermal field)","Hearing (acoustics)","Metabolism (vitals / needs)","Homeostasis (weather / hazards)","Spaces & portal travel","Items & containers"] },
+  canon:{ c:"--pip", badge:"MEMORY", title:"CANON \u00b7 THE SCARS", sub:"immutable history",
+    analogy:"The body remembers every wound. Nothing is ever deleted \u2014 it is severed and scarred. A nuked Goodsprings is not a blank space; it's a graveyard the world can still feel, with a history written into the tissue. Severance preserves; deletion would be amnesia.",
+    eng:"Write-once canon + the severance protocol + dm_context. Read by the cortex, never by the body. A severed node stays in the registry forever, flagged, its consequences run, its prohibition auto-injected.",
+    sys:["Canon (write-only)","Severance protocol","dm_context (always / never)","Dangling backlog"] },
+  genome:{ c:"--genome", badge:"BLUEPRINT", title:"THE GENOME", sub:"authored content, expressed",
+    analogy:"The DNA the organism grows from \u2014 the 13 personas, the lore, the rooms, all authored. And here's the trick that lets an AI-grown world still replay: when the cortex authors something and it passes the membrane, it's written <i>back</i> into the genome as concrete data. It becomes heritable. The author is gone; the gene remains.",
+    eng:"Content packs + frozen schemas + authored personas + lore-card deck. AI-authored nodes commit into dynamicContent \u2014 heritable, deterministic, replayable. The model never re-runs; its genes do.",
+    sys:["Content packs (data, not code)","Frozen schemas","Authored personas","Lore DB / flash-cards","Dynamic (AI-authored) content"] },
+  senses:{ c:"--neural", badge:"PERCEPTION", title:"THE SENSES", sub:"the snapshot",
+    analogy:"What the cortex is allowed to perceive \u2014 assembled fresh from the body's true state each moment. The mind can vividly narrate only what the senses report; it cannot describe a limb that isn't there, because the snapshot never showed it one.",
+    eng:"The snapshot builder: truthful state + canon + dm_context + recalled cards, compiled into the model's context. Perception is curated by the engine, so hallucination has nothing to grab onto.",
+    sys:["Snapshot builder","Lore injection (3\u20136 cards)","dm_context assembly","never-rule surfacing"] }
+};
+
+const svg=document.getElementById("svg"), NS="http://www.w3.org/2000/svg";
+function el(tag,attrs){ const e=document.createElementNS(NS,tag); for(const k in attrs)e.setAttribute(k,attrs[k]); return e; }
+
+/* macro connectome network */
+const NET=[ [600,200],[702,232],[742,318],[688,398],[592,402],[556,310],[650,300] ];
+const EDGES=[[6,0],[6,1],[6,2],[6,3],[6,4],[6,5],[0,1],[1,2],[2,3],[3,4],[4,5],[5,0]];
+(function buildNet(){
+  const g=document.getElementById("net");
+  const wrap=el("g",{class:"reg","data-k":"macro"});
+  // selection ring
+  wrap.appendChild(el("rect",{class:"sel-ring",x:520,y:160,width:280,height:290,rx:18,fill:"none",stroke:"var(--neural)","stroke-width":2}));
+  // edges + travelling signals
+  EDGES.forEach((e,i)=>{ const a=NET[e[0]],b=NET[e[1]];
+    const id="ed"+i;
+    g.appendChild(el("path",{id,class:"hl",d:`M${a[0]},${a[1]} L${b[0]},${b[1]}`,stroke:"var(--neural)","stroke-width":1.1,fill:"none",opacity:.45}));
+    if(i%2===0){ const sig=el("circle",{r:2.6,fill:"#9dffe0"}); const m=el("animateMotion",{dur:(2+i*0.18)+"s",repeatCount:"indefinite"});
+      m.appendChild(el("mpath",{href:"#"+id})); sig.appendChild(m); g.appendChild(sig); }
+  });
+  // nodes (minds)
+  NET.forEach((n,i)=>{ const r=i===6?13:9;
+    g.appendChild(el("circle",{class:"hl",cx:n[0],cy:n[1],r,fill:"rgba(95,217,255,.14)",stroke:"var(--neural)","stroke-width":1.5})); });
+  g.appendChild(el("text",Object.assign(el("text",{}),{}))); // noop guard
+  const lbl=el("text",{class:"lbl",x:660,y:175,fill:"var(--neural)","font-size":15,"text-anchor":"middle"}); lbl.textContent="MACRO-CONNECTOME \u00b7 the town"; g.appendChild(lbl);
+  g.appendChild(wrap);
+
+  // zoom cone from a macro node to the micro inset
+  g.appendChild(el("path",{d:"M742,318 L688,520 M742,318 L872,520",stroke:"var(--neural)","stroke-width":0.8,"stroke-dasharray":"3 3",fill:"none",opacity:.4}));
+
+  // MICRO inset \u2014 one mind exploded
+  const micro=el("g",{class:"reg","data-k":"micro"});
+  micro.appendChild(el("circle",{class:"sel-ring",cx:780,cy:560,r:82,fill:"none",stroke:"var(--neural)","stroke-width":2}));
+  micro.appendChild(el("circle",{class:"hl",cx:780,cy:560,r:70,fill:"rgba(95,217,255,.07)",stroke:"var(--neural)","stroke-width":1.6}));
+  const inner=[["persona",780,512],["memory",838,548],["cards",812,602],["regard",748,602],["gate",724,548]];
+  inner.forEach(p=>{ micro.appendChild(el("line",{x1:780,y1:560,x2:p[1],y2:p[2],stroke:"var(--neural)","stroke-width":0.9,opacity:.5}));
+    micro.appendChild(el("circle",{class:"hl",cx:p[1],cy:p[2],r:5,fill:"var(--neural)"}));
+    const t=el("text",{class:"cap",x:p[1],y:p[2]-8,fill:"#bfe9ff","font-size":9,"text-anchor":"middle"}); t.textContent=p[0]; micro.appendChild(t); });
+  micro.appendChild(el("circle",{cx:780,cy:560,r:5,fill:"#9dffe0"}));
+  const ml=el("text",{class:"lbl",x:780,y:645,fill:"var(--neural)","font-size":13,"text-anchor":"middle"}); ml.textContent="MICRO-CONNECTOME \u00b7 one mind"; micro.appendChild(ml);
+  g.appendChild(micro);
+})();
+
+/* circulation signal down the membrane, sense signal up */
+(function flows(){
+  const g=document.getElementById("net");
+  const cP=el("path",{id:"circ",d:"M820,150 L820,520",fill:"none"}); cP.style.display="none"; g.appendChild(cP);
+})();
+
+/* interaction */
+const panel=document.getElementById("panel");
+function show(k){
+  document.querySelectorAll(".reg").forEach(r=>r.classList.toggle("on", r.getAttribute("data-k")===k));
+  const d=REGIONS[k]||REGIONS.intro;
+  panel.innerHTML=
+    `<span class="badge" style="color:var(${d.c});border-color:var(${d.c})">${d.badge}</span>`+
+    `<h2 style="color:var(${d.c})">${d.title}</h2>`+
+    `<div class="sub">${d.sub||""}</div>`+
+    `<div class="analogy">${d.analogy}</div>`+
+    (d.eng?`<h3>IN THE ENGINE</h3><div class="eng">${d.eng}</div>`:"")+
+    (d.sys&&d.sys.length?`<h3>SYSTEMS HERE</h3><ul>${d.sys.map(s=>`<li>${s}</li>`).join("")}</ul>`:`<div class="hint" style="margin-top:14px">Tip: the membrane is the most important line on this diagram \u2014 it's why a weak local model can never corrupt the world.</div>`);
+}
+document.querySelectorAll(".reg").forEach(r=>r.addEventListener("click",()=>show(r.getAttribute("data-k"))));
+show("intro");
+</script>
+</body>
+</html>
